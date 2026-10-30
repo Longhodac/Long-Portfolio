@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#111213"/>
+  <path d="M60 107h1080M60 551h1080" stroke="#343739"/>
+  <g fill="#f1f1ef" font-family="Arial,Helvetica,sans-serif">
+    <text x="60" y="70" font-size="28">Long HoDac<tspan fill="#9ab9f5">.</tspan></text>
+    <text x="60" y="253" font-size="68" letter-spacing="-3">I build AI systems</text>
+    <text x="60" y="335" font-size="68" letter-spacing="-3">and the infrastructure</text>
+    <text x="60" y="417" font-size="68" letter-spacing="-3" fill="#9ab9f5">behind them.</text>
+    <text x="60" y="590" font-size="18" fill="#a4a7aa">SOFTWARE ENGINEER / UC SAN DIEGO</text>
+  </g>
+  <g fill="#111213" stroke="#748293" stroke-width="1.4">
+    <path d="m900 380 100-57 100 57v18l-100 57-100-57Z"/>
+    <path d="m900 380 100 57 100-57m-100 57v18" fill="none"/>
+    <path d="m900 290 100-57 100 57v18l-100 57-100-57Z"/>
+    <path d="m900 290 100 57 100-57m-100 57v18" fill="none"/>
+    <path d="m900 200 100-57 100 57v18l-100 57-100-57Z" stroke="#d4d8dc"/>
+    <path d="m900 200 100 57 100-57m-100 57v18" fill="none" stroke="#d4d8dc"/>
+  </g>
+  <path d="M1100 200h30v180h-30" fill="none" stroke="#9ab9f5" stroke-width="2"/>
+  <path d="m980 290 20-12 20 12-20 12Z" fill="#9ab9f5"/>
+</svg>

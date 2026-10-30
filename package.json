@@ -1,0 +1,10 @@
+{
+  "name": "long-hodac-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A lightweight, accessible portfolio for Long HoDac.",
+  "scripts": {
+    "dev": "python3 -m http.server 4173 --bind 127.0.0.1 --directory dist",
+    "check": "node --check dist/script.js"
+  }
+}
