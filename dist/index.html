@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#161614" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#0a0f24">
   <meta name="description" content="Long HoDac is a software engineer and computer science student at UC San Diego working on applied AI and infrastructure, with internships at IBM and Workday.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Long HoDac">
   <meta property="og:description" content="Software engineer working on applied AI and infrastructure. IBM, Workday, UC San Diego.">
   <meta property="og:url" content="https://long-hodac-portfolio.adroitchord.chatgpt.site/">
-  <meta property="og:image" content="https://long-hodac-portfolio.adroitchord.chatgpt.site/assets/social.png">
+  <meta property="og:image" content="https://long-hodac-portfolio.adroitchord.chatgpt.site/assets/social.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Long HoDac. Software engineer.">
@@ -18,7 +17,8 @@
   <title>Long HoDac</title>
   <link rel="canonical" href="https://long-hodac-portfolio.adroitchord.chatgpt.site/">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-  <link rel="preload" href="/assets/fonts/instrument-sans-regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/geist-mono.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Long HoDac","url":"https://long-hodac-portfolio.adroitchord.chatgpt.site/","jobTitle":"Software Engineer","email":"mailto:lhodac@ucsd.edu","alumniOf":"UC San Diego","sameAs":["https://github.com/Longhodac","https://www.linkedin.com/in/long-hodac/"]}</script>
   <script src="/script.js" defer></script>
@@ -26,159 +26,314 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header page" id="top">
-    <a class="site-name" href="/">Long HoDac</a>
+  <canvas class="scene" id="scene" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="nav-name" href="#main">Long HoDac</a>
     <nav aria-label="Main">
       <a href="#work">Work</a>
       <a href="#projects">Projects</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
     </nav>
+    <button class="fx-toggle" type="button" aria-pressed="true" hidden><span aria-hidden="true">FX: </span><span class="sr-only">Effects</span><span class="fx-state" aria-hidden="true">ON</span></button>
+    <span class="nav-progress" aria-hidden="true"></span>
   </header>
 
-  <main id="main" class="page" tabindex="-1">
-    <section class="intro" aria-labelledby="intro-title">
-      <h1 id="intro-title">Hi, I’m Long.</h1>
-      <p class="lede">Software engineer working on applied AI and infrastructure. I’ve interned at IBM and Workday, and I study computer science at UC San Diego.</p>
-      <ul class="inline-links" aria-label="Profiles">
-        <li><a class="link" href="https://github.com/Longhodac" target="_blank" rel="noopener noreferrer">GitHub<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></li>
-        <li><a class="link" href="https://www.linkedin.com/in/long-hodac/" target="_blank" rel="noopener noreferrer">LinkedIn<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></li>
-        <li><a class="link" href="mailto:lhodac@ucsd.edu">Email</a></li>
-      </ul>
+  <main id="main" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-title" data-perch-section data-line="Scroll. I’ll keep up.">
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="perch" data-perch data-pose="sit" data-x="0.74" data-y="1"></div>
+      <div class="hero-copy">
+        <h1 id="hero-title" class="hero-title"><img src="/assets/art/logo.png" alt="Hi, I’m Long." width="178" height="40"></h1>
+        <p class="lede">Software engineer working on <em>applied AI</em> and <em>infrastructure</em>. I’ve interned at <em>IBM</em> and <em>Workday</em>, and I study computer science at <em>UC San Diego</em>.</p>
+        <p class="release">Graduating - <span>03/2027</span></p>
+        <ul class="hero-actions" aria-label="Profiles">
+          <li><a class="btn btn-solid" href="https://github.com/Longhodac" target="_blank" rel="noopener noreferrer">GitHub<span class="sr-only"> (opens in a new tab)</span></a></li>
+          <li><a class="btn" href="https://www.linkedin.com/in/long-hodac/" target="_blank" rel="noopener noreferrer">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a></li>
+          <li><a class="btn" href="mailto:lhodac@ucsd.edu">Email</a></li>
+        </ul>
+      </div>
+      <div class="floor" aria-hidden="true"></div>
     </section>
 
-    <section id="work" class="section" aria-labelledby="work-title">
-      <h2 id="work-title" class="section-title">Work</h2>
-      <ol class="entries">
-        <li class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">IBM</h3>
-            <span class="meta">Aug – Dec 2026</span>
-          </div>
-          <p class="entry-role">Software Developer Intern</p>
-          <p>I’m building agents for internal engineering workflows. ReAct agents search existing runbooks and draft new ones from Slack and GitHub context. Underneath is a Python MCP server for the agents’ tools, Milvus for retrieval running on OpenShift, and Jenkins jobs that handle ingestion.</p>
-          <ul class="meta stack" aria-label="Technologies"><li>Python</li><li>MCP</li><li>Milvus</li><li>OpenShift</li><li>Jenkins</li></ul>
-        </li>
-        <li class="entry">
-          <div class="entry-head">
-            <h3 class="entry-title">Workday</h3>
-            <span class="meta">May – Aug 2026</span>
-          </div>
-          <p class="entry-role">Software Engineer Intern</p>
-          <p>I built an AI agent for payroll incident triage with LangGraph. It calls internal investigation tools, and a React dashboard shows each step it took, so engineers can review its findings and approve what happens next. Tests and LangSmith evaluations caught tool-call and approval regressions.</p>
-          <ul class="meta stack" aria-label="Technologies"><li>LangGraph</li><li>React</li><li>TypeScript</li><li>LangSmith</li></ul>
-        </li>
-      </ol>
-    </section>
+    <div class="hang hang-hero"><figure class="frame" aria-hidden="true"><video muted loop playsinline preload="none" poster="/assets/art/roman.jpg" width="840" height="494" tabindex="-1" data-fx-video><source src="/assets/art/roman.mp4" type="video/mp4"></video></figure></div>
 
-    <section id="projects" class="section" aria-labelledby="projects-title">
-      <h2 id="projects-title" class="section-title">Projects</h2>
-      <article class="entry project" aria-labelledby="logplat-title">
-        <div class="entry-head">
-          <h3 class="entry-title" id="logplat-title"><a class="link" href="https://github.com/Longhodac/log-plat" target="_blank" rel="noopener noreferrer">log-plat<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
-          <span class="meta">Go</span>
+    <section id="work" class="section" aria-labelledby="work-title" data-perch-section data-line="Five quests so far.">
+      <div class="column">
+        <h2 id="work-title" class="sec-title">Work</h2>
+        <div class="win-wrap">
+          <div class="perch" data-perch data-pose="sit" data-x="0.84" data-y="0"></div>
+          <div class="win quest" data-tabs>
+            <p class="win-bar"><span>Quest log</span><i aria-hidden="true"></i></p>
+            <div class="quest-tabs" role="tablist" aria-label="Jobs" aria-orientation="horizontal">
+              <button type="button" role="tab" id="tab-ibm" aria-controls="job-ibm" aria-selected="true"><b>IBM</b><span>Aug – Dec 2026</span></button>
+              <button type="button" role="tab" id="tab-workday" aria-controls="job-workday" aria-selected="false" tabindex="-1"><b>Workday</b><span>May – Aug 2026</span></button>
+              <button type="button" role="tab" id="tab-transnode" aria-controls="job-transnode" aria-selected="false" tabindex="-1"><b>Transnode AI</b><span>Feb – May 2026</span></button>
+              <button type="button" role="tab" id="tab-e4e" aria-controls="job-e4e" aria-selected="false" tabindex="-1"><b>Engineers for Exploration</b><span>Jan – May 2026</span></button>
+              <button type="button" role="tab" id="tab-ujima" aria-controls="job-ujima" aria-selected="false" tabindex="-1"><b>UJIMA S&amp;P Research</b><span>Jun 2025 – May 2026</span></button>
+            </div>
+            <div class="timeline" aria-hidden="true">
+              <i style="--from:14;--to:19"></i>
+              <i style="--from:11;--to:14"></i>
+              <i style="--from:8;--to:11"></i>
+              <i style="--from:7;--to:11"></i>
+              <i style="--from:0;--to:11"></i>
+              <p><span>Jun 2025</span><span style="--at:7">Jan 2026</span><span style="--at:19">Dec 2026</span></p>
+            </div>
+            <div class="quest-panel" role="tabpanel" id="job-ibm" aria-labelledby="tab-ibm" tabindex="0">
+              <h3>IBM</h3>
+              <p class="meta">Software Developer Intern / Durham, NC / Aug – Dec 2026</p>
+              <ul class="bullets">
+                <li>Built a ReAct multi-agent system turning meeting transcripts, Slack &amp; design docs into runbooks for 20+ engineers</li>
+                <li>Developed a Python MCP server connecting Slack, Teams, and IBM docs to search 100+ runbooks in &lt;100 ms</li>
+                <li>Improved agent reliability via Langfuse evaluations, debugging retrieval failures and refining prompts and skills</li>
+                <li>Designed Milvus vector DB schemas for embeddings and metadata; deployed on OpenShift with Jenkins CI/CD</li>
+                <li>Reviewed teammates’ infrastructure PRs and debugged deployment failures, unblocking internal IBM services</li>
+              </ul>
+              <ul class="stats" aria-label="Key numbers"><li><b>20+</b><span>engineers served</span></li><li><b>100+</b><span>runbooks searchable</span></li><li><b>&lt;100 ms</b><span>to search them</span></li></ul>
+              <figure class="viz" data-viz="runbooks" hidden><canvas aria-hidden="true"></canvas><figcaption>How runbooks get built and searched. An illustration, not measured data.</figcaption></figure>
+            </div>
+            <div class="quest-panel" role="tabpanel" id="job-workday" aria-labelledby="tab-workday" tabindex="0">
+              <h3>Workday</h3>
+              <p class="meta">Software Engineer Intern / Pleasanton, CA / May – Aug 2026</p>
+              <ul class="bullets">
+                <li>Shipped a LangGraph payroll triage agent for on-call engineers, cutting production incident resolution time 30%</li>
+                <li>Integrated 20+ MCP, Jira, and CLI tools to automate production investigations, cutting manual triage time 50%</li>
+                <li>Built a React/TypeScript dashboard for agent monitoring and approvals, integrating Okta SSO for employee sign-in</li>
+                <li>Wrote Jest unit tests and LangSmith assertions to catch agent approval regressions and incorrect tool-call outputs</li>
+              </ul>
+              <ul class="stats" aria-label="Key numbers"><li><b>30%</b><span>less incident resolution time</span><i class="bar" style="--v:0.7;--from:1"></i></li><li><b>50%</b><span>less manual triage time</span><i class="bar" style="--v:0.5;--from:1"></i></li><li><b>20+</b><span>tools integrated</span></li></ul>
+              <figure class="viz" data-viz="triage" hidden><canvas aria-hidden="true"></canvas><figcaption>One incident, from alert to approved fix. An illustration, not measured data.</figcaption></figure>
+            </div>
+            <div class="quest-panel" role="tabpanel" id="job-transnode" aria-labelledby="tab-transnode" tabindex="0">
+              <h3>Transnode AI</h3>
+              <p class="meta">Software Engineer Intern, UC Launch Accelerator / Remote / Feb – May 2026</p>
+              <ul class="bullets">
+                <li>Owned end-to-end delivery of a React verification portal with Cloud Vision OCR, cutting manual review time 40%</li>
+                <li>Built Stripe billing APIs with an immutable credit ledger and idempotent webhooks to prevent duplicate charges</li>
+                <li>Implemented Firebase authentication and RBAC for candidate documents across 7 employer roles and workspaces</li>
+              </ul>
+              <ul class="stats" aria-label="Key numbers"><li><b>40%</b><span>less manual review time</span><i class="bar" style="--v:0.6;--from:1"></i></li><li><b>7</b><span>employer roles with RBAC</span></li></ul>
+              <figure class="viz" data-viz="billing" hidden><canvas aria-hidden="true"></canvas><figcaption>Document review on top, billing below, where a repeated webhook never reaches the ledger. An illustration, not measured data.</figcaption></figure>
+            </div>
+            <div class="quest-panel" role="tabpanel" id="job-e4e" aria-labelledby="tab-e4e" tabindex="0">
+              <h3>Engineers for Exploration, UC San Diego</h3>
+              <p class="meta">Research Software Engineer / San Diego, CA / Jan – May 2026</p>
+              <ul class="bullets">
+                <li>Built a TypeScript sync API for an iOS field app, achieving 95%+ upload success to AWS S3 with automated retries</li>
+                <li>Optimized a Rust image-processing library with Rayon parallelism to speed analysis of field-captured fish images</li>
+              </ul>
+              <ul class="stats" aria-label="Key numbers"><li><b>95%+</b><span>upload success to S3</span><i class="bar" style="--v:0.95;--from:0"></i></li></ul>
+              <figure class="viz" data-viz="uploads" hidden><canvas aria-hidden="true"></canvas><figcaption>Uploads retry until they land, and images process in parallel. An illustration, not measured data.</figcaption></figure>
+            </div>
+            <div class="quest-panel" role="tabpanel" id="job-ujima" aria-labelledby="tab-ujima" tabindex="0">
+              <h3>UJIMA S&amp;P Research Group, UC San Diego</h3>
+              <p class="meta">Research Software Engineer / San Diego, CA / Jun 2025 – May 2026</p>
+              <ul class="bullets">
+                <li>Developed a Flask/PostgreSQL app for 108K face images, finding filters altered model predictions in 46% of cases</li>
+                <li>Processed 50K+ comments across 3K+ TikTok videos using concurrent Python ETL and Playwright for NLP tasks</li>
+              </ul>
+              <ul class="stats" aria-label="Key numbers"><li><b>108K</b><span>face images</span></li><li><b>50K+</b><span>comments</span></li><li><b>3K+</b><span>TikTok videos</span></li></ul>
+              <figure class="viz" data-viz="waffle" hidden><canvas aria-hidden="true"></canvas><figcaption>How often a filter changed the model’s prediction. Each square is 1% of cases.</figcaption></figure>
+            </div>
+          </div>
         </div>
-        <p>A distributed log pipeline. Agents tail log files and send batches over gRPC to a collector, which publishes them to Kafka. An indexer moves records from Kafka into OpenSearch, and a small REST API serves search. Redis handles rate limiting and a search cache.</p>
-        <p>The goal was to never lose a log line, even when a service crashes mid-stream. Every hop is allowed to retry, so duplicates are expected. Each document’s ID comes from the line’s position in its source file, so a redelivered line overwrites itself instead of creating a copy. A separate checker reads the original file and confirms every line reached OpenSearch. Across 17 fault-injection scenarios, it found zero missing lines.</p>
-        <ul class="meta stack" aria-label="Technologies"><li>Go</li><li>gRPC</li><li>Kafka</li><li>OpenSearch</li><li>Redis</li><li>Docker</li></ul>
-
-        <figure class="pipeline" aria-labelledby="pipeline-caption">
-          <figcaption id="pipeline-caption" class="pipeline-caption">
-            <span>Pipeline</span>
-            <span class="pipeline-hint">Select a stage to see what happens when it fails</span>
-          </figcaption>
-          <div class="stages" role="tablist" aria-label="Pipeline stages" aria-orientation="horizontal">
-            <button class="stage" type="button" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="true">agent</button>
-            <span class="edge" aria-hidden="true"><span>gRPC</span></span>
-            <button class="stage" type="button" role="tab" id="tab-collector" aria-controls="panel-collector" aria-selected="false" tabindex="-1">collector</button>
-            <span class="edge" aria-hidden="true"><span>acks=all</span></span>
-            <button class="stage" type="button" role="tab" id="tab-kafka" aria-controls="panel-kafka" aria-selected="false" tabindex="-1">kafka</button>
-            <span class="edge" aria-hidden="true"><span>poll</span></span>
-            <button class="stage" type="button" role="tab" id="tab-indexer" aria-controls="panel-indexer" aria-selected="false" tabindex="-1">indexer</button>
-            <span class="edge" aria-hidden="true"><span>_bulk</span></span>
-            <button class="stage" type="button" role="tab" id="tab-opensearch" aria-controls="panel-opensearch" aria-selected="false" tabindex="-1">opensearch</button>
-          </div>
-
-          <div class="stage-panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent" tabindex="0">
-            <h4 class="panel-title">agent</h4>
-            <dl>
-              <dt>Does</dt><dd>Tails log files and gives each line an ID from its file position. Each batch is written to a disk spool with fsync before it’s sent.</dd>
-              <dt>If it fails</dt><dd>Spooled batches survive the crash. A batch is deleted only after the collector acks it, so anything unacknowledged is resent on restart.</dd>
-            </dl>
-          </div>
-          <div class="stage-panel" role="tabpanel" id="panel-collector" aria-labelledby="tab-collector" tabindex="0">
-            <h4 class="panel-title">collector</h4>
-            <dl>
-              <dt>Does</dt><dd>gRPC server. Checks the API key, rejects invalid entries, and publishes to Kafka partitioned by service, waiting for all replicas to confirm.</dd>
-              <dt>If it fails</dt><dd>It acks the agent only after Kafka confirms the write. No ack means the agent keeps the batch and resends it with exponential backoff.</dd>
-            </dl>
-          </div>
-          <div class="stage-panel" role="tabpanel" id="panel-kafka" aria-labelledby="tab-kafka" tabindex="0">
-            <h4 class="panel-title">kafka</h4>
-            <dl>
-              <dt>Does</dt><dd>Buffers records between ingestion and indexing, so a slow indexer doesn’t push back on the agents.</dd>
-              <dt>If it fails</dt><dd>The collector can’t get a confirmed write, so it never acks. Batches stay in the agents’ spools until Kafka is back.</dd>
-            </dl>
-          </div>
-          <div class="stage-panel" role="tabpanel" id="panel-indexer" aria-labelledby="tab-indexer" tabindex="0">
-            <h4 class="panel-title">indexer</h4>
-            <dl>
-              <dt>Does</dt><dd>Kafka consumer group. Bulk-writes into daily indices and commits its offsets only after OpenSearch accepts the writes. Records it can’t parse go to a dead-letter topic.</dd>
-              <dt>If it fails</dt><dd>A crash between the write and the commit means Kafka redelivers those records. They carry the same IDs, so they overwrite the earlier copies.</dd>
-            </dl>
-          </div>
-          <div class="stage-panel" role="tabpanel" id="panel-opensearch" aria-labelledby="tab-opensearch" tabindex="0">
-            <h4 class="panel-title">opensearch</h4>
-            <dl>
-              <dt>Does</dt><dd>Stores each line as a document keyed by its log ID. The query API on top supports filters by time, service, level, and text, with cursor pagination.</dd>
-              <dt>If it fails</dt><dd>The indexer retries failed items and holds off on committing, so the records wait in Kafka until OpenSearch recovers.</dd>
-            </dl>
-          </div>
-        </figure>
-
-        <details class="details">
-          <summary>How it was tested</summary>
-          <div class="details-body">
-            <p>Each chaos scenario writes 60,000 lines at 3,000 lines/s, injects a fault four seconds in, heals it, and then runs the checker. All 17 passed with zero missing lines in three full runs, using the whole stack in Docker on one laptop.</p>
-            <dl class="scenarios">
-              <dt>Process kills</dt><dd>SIGKILL the collector, Kafka, the indexer, the agent, or OpenSearch.</dd>
-              <dt>Network faults</dt><dd>Toxiproxy cuts the links to the collector, Kafka, and OpenSearch, adds 800 ms of latency, resets connections, throttles Kafka to 50 KB/s, and blackholes OpenSearch.</dd>
-              <dt>Forced duplicates</dt><dd>Drop the collector’s acks, or kill the indexer after a write but before its offset commit. These fail unless OpenSearch absorbs the redundant writes.</dd>
-              <dt>Crash loops</dt><dd>Kill the collector and the indexer three times each, and kill every service in sequence.</dd>
-            </dl>
-            <p>On the same laptop, the default config indexes about 70,000 lines/s. The limit is the indexer’s poll, write, commit cycle, not the agents or the collector.</p>
-            <p><a class="link" href="https://github.com/Longhodac/log-plat/blob/main/results/README.md" target="_blank" rel="noopener noreferrer">Results and raw output<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></p>
-          </div>
-        </details>
-      </article>
+      </div>
+      <div class="hang hang-gutter hang-left" style="--y: 420px"><figure class="frame" aria-hidden="true" hidden></figure></div>
     </section>
 
-    <section id="about" class="section" aria-labelledby="about-title">
-      <h2 id="about-title" class="section-title">About</h2>
-      <p>I’m studying computer science at UC San Diego and graduate in March 2027. I like building ambitious software and figuring out how a system works end to end, from the interface down to the infrastructure. Most of my work falls into applied AI, backend engineering, and infrastructure, with some full-stack along the way, and I’m usually trying out some new technology on the side.</p>
+    <div class="hang hang-work"><figure class="frame" aria-hidden="true"><img src="/assets/art/crack.jpg" alt="" width="840" height="472" loading="lazy" decoding="async"></figure></div>
+
+    <section id="projects" class="section" aria-labelledby="projects-title" data-perch-section data-line="Crash something. I dare you.">
+      <div class="column">
+        <h2 id="projects-title" class="sec-title">Projects</h2>
+
+        <div class="win-wrap">
+          <div class="perch" data-perch data-pose="sit" data-x="0.86" data-y="0" data-wide-pose="crouch" data-wide-x="1.14" data-wide-y="0.3"></div>
+          <article class="win" aria-labelledby="logplat-title">
+            <p class="win-bar"><span>Main quest</span><i aria-hidden="true"></i></p>
+            <div class="win-body">
+              <h3 class="project-title" id="logplat-title"><a href="https://github.com/Longhodac/log-plat" target="_blank" rel="noopener noreferrer">Distributed Log Ingestion Pipeline<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+              <ul class="bullets">
+                <li>Built a Go/Kafka pipeline with durable spooling and idempotent writes, with zero loss in 17 tests on 1.02M logs</li>
+                <li>Processed 70K logs/sec in local tests, cutting repeat-query latency 23× via Redis caching and OpenSearch indexing</li>
+              </ul>
+              <ul class="stats stats-row" aria-label="Key numbers"><li><b>0</b><span>logs lost</span></li><li><b>17</b><span>tests</span></li><li><b>1.02M</b><span>logs tested</span></li><li><b>70K</b><span>logs/sec, local tests</span></li><li><b>23×</b><span>lower repeat-query latency</span></li></ul>
+              <figure class="viz" data-viz="race" hidden><canvas aria-hidden="true"></canvas><figcaption>The same repeat query, before and after caching. 23× is the measured ratio, and the speed shown is illustrative.</figcaption></figure>
+              <ul class="tags" aria-label="Technologies"><li>Go</li><li>gRPC</li><li>Kafka</li><li>Redis</li><li>OpenSearch</li><li>Chaos Testing</li></ul>
+
+              <div class="pipeline" data-tabs role="group" aria-labelledby="pipeline-caption">
+                <p id="pipeline-caption" class="pipeline-caption"><b>Pipeline</b> <span>Select a stage to see what happens when it fails</span></p>
+                <div class="stages" role="tablist" aria-label="Pipeline stages" aria-orientation="horizontal">
+                  <canvas class="stages-canvas" aria-hidden="true"></canvas>
+                  <button class="stage" type="button" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="true">agent</button>
+                  <span class="edge" aria-hidden="true"><span>gRPC</span></span>
+                  <button class="stage" type="button" role="tab" id="tab-collector" aria-controls="panel-collector" aria-selected="false" tabindex="-1">collector</button>
+                  <span class="edge" aria-hidden="true"><span>acks=all</span></span>
+                  <button class="stage" type="button" role="tab" id="tab-kafka" aria-controls="panel-kafka" aria-selected="false" tabindex="-1">kafka</button>
+                  <span class="edge" aria-hidden="true"><span>poll</span></span>
+                  <button class="stage" type="button" role="tab" id="tab-indexer" aria-controls="panel-indexer" aria-selected="false" tabindex="-1">indexer</button>
+                  <span class="edge" aria-hidden="true"><span>_bulk</span></span>
+                  <button class="stage" type="button" role="tab" id="tab-opensearch" aria-controls="panel-opensearch" aria-selected="false" tabindex="-1">opensearch</button>
+                </div>
+                <div class="sim" hidden>
+                  <div class="sim-controls">
+                    <button class="btn crash" type="button">Crash <span class="crash-name">agent</span></button>
+                    <p class="sim-readout" aria-hidden="true"><span>read <b data-count="read">0</b></span><span>indexed <b data-count="indexed">0</b></span><span>in flight <b data-count="waiting">0</b></span><span>lost <b data-count="lost">0</b></span></p>
+                    <p class="sim-note">An illustration of the delivery rules, not measured data.</p>
+                    <p class="sr-only sim-status" role="status"></p>
+                  </div>
+                  <div class="crt" aria-hidden="true"><img src="/assets/art/roman.jpg" alt="" width="840" height="494" loading="lazy" decoding="async"><span class="crt-label"></span></div>
+                </div>
+                <div class="stage-panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent" tabindex="0">
+                  <h4 class="panel-title">agent</h4>
+                  <dl>
+                    <dt>Does</dt><dd>Tails log files and gives each line an ID from its file position. Each batch is written to a disk spool with fsync before it’s sent.</dd>
+                    <dt>If it fails</dt><dd>Spooled batches survive the crash. A batch is deleted only after the collector acks it, so anything unacknowledged is resent on restart.</dd>
+                  </dl>
+                </div>
+                <div class="stage-panel" role="tabpanel" id="panel-collector" aria-labelledby="tab-collector" tabindex="0">
+                  <h4 class="panel-title">collector</h4>
+                  <dl>
+                    <dt>Does</dt><dd>gRPC server. Checks the API key, rejects invalid entries, and publishes to Kafka partitioned by service, waiting for all replicas to confirm.</dd>
+                    <dt>If it fails</dt><dd>It acks the agent only after Kafka confirms the write. No ack means the agent keeps the batch and resends it with exponential backoff.</dd>
+                  </dl>
+                </div>
+                <div class="stage-panel" role="tabpanel" id="panel-kafka" aria-labelledby="tab-kafka" tabindex="0">
+                  <h4 class="panel-title">kafka</h4>
+                  <dl>
+                    <dt>Does</dt><dd>Buffers records between ingestion and indexing, so a slow indexer doesn’t push back on the agents.</dd>
+                    <dt>If it fails</dt><dd>The collector can’t get a confirmed write, so it never acks. Batches stay in the agents’ spools until Kafka is back.</dd>
+                  </dl>
+                </div>
+                <div class="stage-panel" role="tabpanel" id="panel-indexer" aria-labelledby="tab-indexer" tabindex="0">
+                  <h4 class="panel-title">indexer</h4>
+                  <dl>
+                    <dt>Does</dt><dd>Kafka consumer group. Bulk-writes into daily indices and commits its offsets only after OpenSearch accepts the writes. Records it can’t parse go to a dead-letter topic.</dd>
+                    <dt>If it fails</dt><dd>A crash between the write and the commit means Kafka redelivers those records. They carry the same IDs, so they overwrite the earlier copies.</dd>
+                  </dl>
+                </div>
+                <div class="stage-panel" role="tabpanel" id="panel-opensearch" aria-labelledby="tab-opensearch" tabindex="0">
+                  <h4 class="panel-title">opensearch</h4>
+                  <dl>
+                    <dt>Does</dt><dd>Stores each line as a document keyed by its log ID. The query API on top supports filters by time, service, level, and text, with cursor pagination.</dd>
+                    <dt>If it fails</dt><dd>The indexer retries failed items and holds off on committing, so the records wait in Kafka until OpenSearch recovers.</dd>
+                  </dl>
+                </div>
+              </div>
+
+              <details class="details">
+                <summary>How it was tested</summary>
+                <div class="details-body">
+                  <p>Each chaos scenario writes 60,000 lines at 3,000 lines/s, injects a fault four seconds in, heals it, and then runs the checker. All 17 passed with zero missing lines in three full runs, using the whole stack in Docker on one laptop.</p>
+                  <dl class="scenarios">
+                    <dt>Process kills</dt><dd>SIGKILL the collector, Kafka, the indexer, the agent, or OpenSearch.</dd>
+                    <dt>Network faults</dt><dd>Toxiproxy cuts the links to the collector, Kafka, and OpenSearch, adds 800 ms of latency, resets connections, throttles Kafka to 50 KB/s, and blackholes OpenSearch.</dd>
+                    <dt>Forced duplicates</dt><dd>Drop the collector’s acks, or kill the indexer after a write but before its offset commit. These fail unless OpenSearch absorbs the redundant writes.</dd>
+                    <dt>Crash loops</dt><dd>Kill the collector and the indexer three times each, and kill every service in sequence.</dd>
+                  </dl>
+                  <p>The throughput limit is the indexer’s poll, write, commit cycle, not the agents or the collector.</p>
+                  <p><a class="link" href="https://github.com/Longhodac/log-plat/blob/main/results/README.md" target="_blank" rel="noopener noreferrer">Results and raw output<span class="sr-only"> (opens in a new tab)</span></a></p>
+                </div>
+              </details>
+            </div>
+          </article>
+        </div>
+
+        <div class="hang hang-quests"><figure class="frame" aria-hidden="true"><video muted loop playsinline preload="none" poster="/assets/art/duel.jpg" width="840" height="474" tabindex="-1" data-fx-video><source src="/assets/art/duel.mp4" type="video/mp4"></video></figure></div>
+
+        <div class="side-quests win-wrap" data-perch-section data-line="Side quests count too.">
+          <div class="perch" data-perch data-pose="sit" data-x="0.8" data-y="0"></div>
+          <article class="win" aria-labelledby="hnsw-title">
+            <p class="win-bar"><span>Side quest</span><i aria-hidden="true"></i></p>
+            <div class="win-body">
+              <h3 class="project-title" id="hnsw-title"><a href="https://github.com/Longhodac/hnsw-cpp" target="_blank" rel="noopener noreferrer">Low-Latency Vector Search Engine<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+              <ul class="bullets">
+                <li>Built a C++ HNSW search engine for 1M vectors, reaching 45 µs/query at 95% recall with SIMD and prefetching</li>
+                <li>Scaled parallel search 4.9× on 10 threads with atomic reads and striped locks; mmap indexes loaded in ∼2 ms</li>
+              </ul>
+              <ul class="stats stats-row" aria-label="Key numbers"><li><b>45 µs</b><span>per query, 95% recall</span></li><li><b>4.9×</b><span>on 10 threads</span></li><li><b>∼2 ms</b><span>mmap index load</span></li></ul>
+              <figure class="viz" data-viz="hnsw" hidden><canvas aria-hidden="true"></canvas><figcaption>A real greedy search through layers, on a small sample graph rather than the 1M-vector index.</figcaption></figure>
+              <ul class="tags" aria-label="Technologies"><li>C++</li><li>HNSW</li><li>SIMD</li><li>Concurrency</li><li>mmap</li></ul>
+            </div>
+          </article>
+          <article class="win" aria-labelledby="talentlens-title">
+            <p class="win-bar"><span>Side quest</span><i aria-hidden="true"></i></p>
+            <div class="win-body">
+              <h3 class="project-title" id="talentlens-title"><a href="https://github.com/anirudh9280/TalentLens_Public" target="_blank" rel="noopener noreferrer">AI Resume Search with Reranking<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+              <ul class="bullets">
+                <li>Led a 5-person team on resume search for 500+ members, using reranking to lift top-5 matches from 40% to 80%</li>
+                <li>Built OCR-backed resume search using Tesseract to parse scanned PDFs and FAISS for semantic candidate retrieval</li>
+              </ul>
+              <ul class="stats stats-row" aria-label="Key numbers"><li><b>80%</b><span>top-5 matches, up from 40%</span><i class="bar" style="--v:0.8;--from:0.4"></i></li><li><b>500+</b><span>members</span></li><li><b>5</b><span>person team</span></li></ul>
+              <figure class="viz" data-viz="rerank" hidden><canvas aria-hidden="true"></canvas><figcaption>Solid rows are matches. An example ranking showing the measured shift from 2 of 5 to 4 of 5.</figcaption></figure>
+              <ul class="tags" aria-label="Technologies"><li>Python</li><li>PyTorch</li><li>FAISS</li><li>ChromaDB</li></ul>
+            </div>
+          </article>
+        </div>
+      </div>
+      <div class="hang hang-gutter hang-left" style="--y: 28%"><figure class="frame" aria-hidden="true" hidden></figure></div>
+      <div class="hang hang-gutter hang-right" style="--y: 60%"><figure class="frame" aria-hidden="true" hidden></figure></div>
     </section>
 
-    <section id="contact" class="section" aria-labelledby="contact-title">
-      <h2 id="contact-title" class="section-title">Get in touch</h2>
-      <p>I’m happy to hear about engineering roles, projects, or anything on this page. Email is the best way to reach me.</p>
-      <dl class="contact">
-        <dt>Email</dt>
-        <dd>
-          <a class="link" href="mailto:lhodac@ucsd.edu">lhodac@ucsd.edu</a>
-          <button class="copy" type="button" hidden>Copy</button>
-          <span class="copy-status meta" role="status"></span>
-        </dd>
-        <dt>GitHub</dt>
-        <dd><a class="link" href="https://github.com/Longhodac" target="_blank" rel="noopener noreferrer">Longhodac<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></dd>
-        <dt>LinkedIn</dt>
-        <dd><a class="link" href="https://www.linkedin.com/in/long-hodac/" target="_blank" rel="noopener noreferrer">long-hodac<span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></dd>
-      </dl>
+    <div class="hang hang-about"><figure class="frame" aria-hidden="true"><video muted loop playsinline preload="none" poster="/assets/art/embers.jpg" width="840" height="472" tabindex="-1" data-fx-video><source src="/assets/art/embers.mp4" type="video/mp4"></video></figure></div>
+
+    <section id="about" class="section" aria-labelledby="about-title" data-perch-section data-line="Graduating March 2027.">
+      <div class="column">
+        <h2 id="about-title" class="sec-title">About</h2>
+        <div class="win-wrap">
+          <div class="perch" data-perch data-pose="lie" data-x="0.62" data-y="0"></div>
+          <div class="win">
+            <p class="win-bar"><span>Character sheet</span><i aria-hidden="true"></i></p>
+            <div class="win-body about">
+              <div>
+                <p class="about-text">I’m studying computer science at UC San Diego and graduate in March 2027. I like figuring out how a system works end to end, from the interface down to the infrastructure. Most of my work falls into applied AI, backend engineering, and infrastructure.</p>
+                <h3 class="sheet-label">Education</h3>
+                <p>UC San Diego, B.S. Computer Science, March 2027</p>
+                <h3 class="sheet-label">Honors &amp; activities</h3>
+                <ul class="bullets">
+                  <li>TRELS and EMPOWER Scholarships ($20k total)</li>
+                  <li>Lead Full-Stack Developer, Triton Droids</li>
+                </ul>
+              </div>
+              <dl class="skills">
+                <dt>Languages</dt><dd>Java, Python, C/C++, Go, TypeScript, JavaScript, SQL, Rust, Swift, HTML/CSS</dd>
+                <dt>Backend &amp; data</dt><dd>Distributed Systems, Concurrency, REST APIs, gRPC, Kafka, Redis, PostgreSQL, OpenSearch, Milvus</dd>
+                <dt>Frameworks &amp; testing</dt><dd>React, Node.js, Jest, LangGraph, LangSmith, FAISS, PyTorch, Playwright, Integration Testing</dd>
+                <dt>Cloud &amp; DevOps</dt><dd>AWS (S3, EC2), Docker, Kubernetes, OpenShift, Jenkins, CI/CD, Git, GitHub Actions, Grafana</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hang hang-gutter hang-right" style="--y: 340px"><figure class="frame" aria-hidden="true" hidden></figure></div>
+    </section>
+
+    <section id="contact" class="contact" aria-labelledby="contact-title" data-perch-section data-line="Go on, send the email.">
+      <div class="contact-art retro" aria-hidden="true">
+      <video muted loop playsinline preload="none" poster="/assets/art/sky.jpg" tabindex="-1" data-fx-video>
+        <source src="/assets/art/sky-small.mp4" type="video/mp4" media="(max-width: 760px)">
+        <source src="/assets/art/sky.mp4" type="video/mp4">
+      </video>
+      </div>
+      <div class="perch" data-perch data-pose="back" data-x="0.53" data-y="1"></div>
+      <div class="win contact-win">
+        <p class="win-bar"><span>Save point</span><i aria-hidden="true"></i></p>
+        <div class="win-body">
+          <h2 id="contact-title" class="contact-title">Get in touch</h2>
+          <p>I’m happy to hear about engineering roles, projects, or anything on this page. Email is the best way to reach me.</p>
+          <p class="contact-mail"><a href="mailto:lhodac@ucsd.edu">lhodac@ucsd.edu</a><button class="btn copy" type="button" hidden>Copy</button><span class="copy-status" role="status"></span></p>
+          <ul class="hero-actions" aria-label="Profiles">
+            <li><a class="btn" href="https://github.com/Longhodac" target="_blank" rel="noopener noreferrer">GitHub<span class="sr-only"> (opens in a new tab)</span></a></li>
+            <li><a class="btn" href="https://www.linkedin.com/in/long-hodac/" target="_blank" rel="noopener noreferrer">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a></li>
+          </ul>
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer class="site-footer page">
-    <span>© 2026 Long HoDac</span>
-    <a class="link" href="#top">Back to top</a>
-  </footer>
+  <div class="bubble" aria-hidden="true" hidden><span class="bubble-sizer"></span><span class="bubble-line"></span></div>
 </body>
 </html>
