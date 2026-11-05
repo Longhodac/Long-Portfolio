@@ -1,11 +1,14 @@
 """Builds the site's artwork. Needs numpy, OpenCV, Pillow, and ffmpeg.
 
-Usage: python3 tools/build_art.py IMAGES_DIR
+Usage: python3 tools/build_art.py SOURCE_DIR
 
-IMAGES_DIR holds the source stills (5.webp, 6.webp, 7.jpg, 9.webp, 10.webp). They are show frames, so they aren't kept in this repository.
+SOURCE_DIR holds the GIFs and stills named in LOOPS and STILLS, plus 5.webp for the sky. They are show footage, so they aren't kept in this
+repository.
 
-The stills become short retro loops: VHS-style colour, plus a little added motion in each. The city's floor and the
-hero's dithered panel are pixel art and are drawn here too.
+Each GIF becomes a looping video of the whole GIF, uncropped and at its full length, with VHS-style colour and no added
+motion, for the frames around the page. The night sky behind Contact is different: one frame with its lights made to
+twinkle, and the small Capri painted out so the live one can stand there. The city's floor and the hero's dithered panel
+are pixel art and are drawn here too.
 """
 import math
 import random
@@ -18,32 +21,94 @@ import numpy as np
 from PIL import Image
 
 OUT = Path(__file__).resolve().parent.parent / 'dist' / 'assets' / 'art'
+WIDTH = 840
 FPS = 15
+LOOPS = {
+    'duel': 'Capri D Edgerunners GIF.gif',
+    'embers': 'dcpe.gif',
+    'roman': 'roman.gif',
+}
+STILLS = {'crack': '7.jpg'}
 BAYER = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32) / 16
 
 
-def load(path, box, size):
-    """Crops a still and enlarges it smoothly. Returns RGB floats from 0 to 1."""
-    image = Image.open(path).convert('RGB').crop(box)
-    array = np.array(image, dtype=np.float32) / 255
-    return cv2.resize(array, size, interpolation=cv2.INTER_LANCZOS4).clip(0, 1)
+def enlarge(image, height):
+    """Enlarges smoothly, so nothing looks pixelated in a frame on a sharp screen. Returns RGB floats from 0 to 1."""
+    array = np.array(image.convert('RGB'), dtype=np.float32) / 255
+    return cv2.resize(array, (WIDTH, height), interpolation=cv2.INTER_LANCZOS4).clip(0, 1)
 
 
 def grade(rgb):
     """The look of a tape: colour smeared sideways against sharper brightness, glowing highlights, faded blacks."""
+    scale = rgb.shape[1] / 1280
     ycc = cv2.cvtColor(rgb, cv2.COLOR_RGB2YCrCb)
     y, cr, cb = cv2.split(ycc)
-    y = (y + (y - cv2.GaussianBlur(y, (0, 0), 2.4)) * 0.45).clip(0, 1)
-    cr = np.roll(cv2.GaussianBlur(cr, (0, 0), sigmaX=5.5, sigmaY=0.8), 3, axis=1)
-    cb = np.roll(cv2.GaussianBlur(cb, (0, 0), sigmaX=5.5, sigmaY=0.8), -2, axis=1)
+    y = (y + (y - cv2.GaussianBlur(y, (0, 0), 2.4 * scale)) * 0.45).clip(0, 1)
+    cr = np.roll(cv2.GaussianBlur(cr, (0, 0), sigmaX=5.5 * scale, sigmaY=0.8 * scale), round(3 * scale), axis=1)
+    cb = np.roll(cv2.GaussianBlur(cb, (0, 0), sigmaX=5.5 * scale, sigmaY=0.8 * scale), -round(2 * scale), axis=1)
     out = cv2.cvtColor(cv2.merge((y, cr, cb)), cv2.COLOR_YCrCb2RGB).clip(0, 1)
-    out[:, :, 0] = np.roll(out[:, :, 0], 2, axis=1)
-    out[:, :, 2] = np.roll(out[:, :, 2], -2, axis=1)
-    glow = cv2.GaussianBlur(np.clip((rgb - 0.6) / 0.4, 0, 1), (0, 0), 13)
+    shift = max(1, round(2 * scale))
+    out[:, :, 0] = np.roll(out[:, :, 0], shift, axis=1)
+    out[:, :, 2] = np.roll(out[:, :, 2], -shift, axis=1)
+    glow = cv2.GaussianBlur(np.clip((rgb - 0.6) / 0.4, 0, 1), (0, 0), 13 * scale)
     out = out + glow * np.array([0.34, 0.2, 0.26], dtype=np.float32)
     lift = np.array([0.04, 0.022, 0.066], dtype=np.float32)
     out = lift + out * (0.97 - lift)
     return out.clip(0, 1)
+
+
+def even_height(image):
+    return round(image.height * WIDTH / image.width / 2) * 2
+
+
+def save_still(array, name):
+    Image.fromarray(array, 'RGB').save(OUT / f'{name}.jpg', quality=82, optimize=True, progressive=True)
+
+
+def report(name, detail):
+    sizes = ', '.join(f'{p.name} {p.stat().st_size // 1024} KB' for p in sorted(OUT.glob(f'{name}.*')))
+    print(f'{name}: {detail}, {sizes}')
+
+
+def loop(name, path):
+    """Writes the whole GIF as a video, keeping each frame's timing, and its first frame as the poster."""
+    gif = Image.open(path)
+    durations = []
+    for i in range(gif.n_frames):
+        gif.seek(i)
+        durations.append((gif.info.get('duration') or 100) / 1000)
+    total = sum(durations)
+    fps = 30 if gif.n_frames / total > 20 else 15
+    starts = np.cumsum([0] + durations[:-1])
+    height = even_height(gif)
+    command = [
+        'ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{WIDTH}x{height}', '-r', str(fps), '-i', '-',
+        '-an', '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '27', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', str(OUT / f'{name}.mp4'),
+    ]
+    process = subprocess.Popen(command, stdin=subprocess.PIPE)
+    shown = None
+    raw = b''
+    for k in range(max(1, round(total * fps))):
+        index = int(np.searchsorted(starts, k / fps, side='right')) - 1
+        if index != shown:
+            gif.seek(index)
+            shown = index
+            picture = (grade(enlarge(gif, height)) * 255).astype(np.uint8)
+            raw = picture.tobytes()
+            if index == 0:
+                save_still(picture, name)
+        process.stdin.write(raw)
+    process.stdin.close()
+    if process.wait():
+        sys.exit(f'ffmpeg failed for {name}')
+    report(name, f'{WIDTH}x{height}, {gif.n_frames} GIF frames, {total:.1f} s at {fps} fps')
+
+
+def still(name, path):
+    image = Image.open(path)
+    height = even_height(image)
+    save_still((grade(enlarge(image, height)) * 255).astype(np.uint8), name)
+    report(name, f'{WIDTH}x{height}, still')
 
 
 def tape(frame, t, count, rng_seed):
@@ -85,71 +150,6 @@ def encode(name, frames):
     print(f'{name}: {w}x{h}, {len(frames)} frames, {sizes}')
 
 
-def crack(images):
-    """The cracked face on blue, with black debris tumbling past and the cracks pulsing."""
-    base = load(images / '7.jpg', (0, 40, 739, 300), (1280, 448))
-    h, w = base.shape[:2]
-    rng = random.Random(7)
-    count = 45
-    shards = []
-    for i in range(24):
-        near = i < 8
-        length = rng.uniform(16, 40) if near else rng.uniform(5, 15)
-        shards.append({
-            'x': rng.uniform(0, w), 'y': rng.uniform(0, h), 'length': length, 'width': length * rng.uniform(0.18, 0.4),
-            'rot': rng.uniform(0, math.tau), 'turns': rng.choice((-1, 1)), 'laps': 2 if near else 1,
-        })
-    r, g, b = base[:, :, 0], base[:, :, 1], base[:, :, 2]
-    glow = cv2.GaussianBlur(((r > 0.66) & (g < 0.6) & (b < 0.85) & (b > 0.15)).astype(np.float32), (0, 0), 5)[:, :, None]
-    glint = np.zeros((h, w), np.float32)
-    cv2.circle(glint, (745, 195), 12, 1.0, -1, cv2.LINE_AA)
-    glint = cv2.GaussianBlur(glint, (0, 0), 12)[:, :, None]
-    pink = np.array([0.32, 0.12, 0.2], dtype=np.float32)
-    frames = []
-    for t in range(count):
-        frame = base.copy()
-        pulse = 0.5 + 0.5 * math.sin(t / count * math.tau * 2)
-        frame += glow * pink * pulse + glint * 0.6 * max(0, math.sin(t / count * math.tau * 2 + 1)) ** 4
-        for shard in shards:
-            y = (shard['y'] + t / count * (h + 80) * shard['laps']) % (h + 80) - 40
-            angle = shard['rot'] + shard['turns'] * t / count * math.tau
-            c, s = math.cos(angle), math.sin(angle)
-            corners = [(-1, -0.5), (1, -0.2), (0.7, 0.5), (-0.6, 0.35)]
-            points = [(shard['x'] + cx * shard['length'] * c - cy * shard['width'] * s, y + cx * shard['length'] * s + cy * shard['width'] * c) for cx, cy in corners]
-            cv2.fillPoly(frame, [np.round(np.array(points) * 16).astype(np.int32)], (0.03, 0.04, 0.09), cv2.LINE_AA, 4)
-        frames.append(tape(grade(frame.clip(0, 1)), t, count, 100))
-    encode('crack', frames)
-
-
-def duel(images):
-    """D and Capri face to face, with her hair glittering and a short glitch once a loop."""
-    source = images / '6.webp'
-    base = load(source, (0, 14, 498, 188), (1280, 448))
-    h, w = base.shape[:2]
-    rng = random.Random(11)
-    r, g, b = base[:, :, 0], base[:, :, 1], base[:, :, 2]
-    hair = np.argwhere((r > 0.75) & (g < 0.36) & (b < 0.52))
-    specks = [(tuple(int(v) for v in hair[rng.randrange(len(hair))]), rng.randrange(60), rng.uniform(1.2, 3.4)) for _ in range(260)]
-    count = 60
-    frames = []
-    for t in range(count):
-        frame = base.copy()
-        for (y, x), phase, radius in specks:
-            age = (t + phase) % 60
-            if age < 8:
-                cv2.circle(frame, (x * 16, y * 16), int(radius * 16 * math.sin(age / 8 * math.pi)), (1.0, 0.96, 0.98), -1, cv2.LINE_AA, 4)
-        graded = grade(frame.clip(0, 1))
-        if t in (34, 35, 39):
-            for _ in range(8):
-                y = rng.randrange(h - 40)
-                band = rng.randint(8, 34)
-                graded[y:y + band] = np.roll(graded[y:y + band], rng.randint(-90, 90), axis=1)
-            graded[:, :, 0] = np.roll(graded[:, :, 0], 9, axis=1)
-            graded[:, :, 2] = np.roll(graded[:, :, 2], -9, axis=1)
-        frames.append(tape(graded, t, count, 200))
-    encode('duel', frames)
-
-
 def sky(images):
     """Golden lights over the broken turbine, twinkling. The live Capri stands where the small one in the still was."""
     source = np.array(Image.open(images / '5.webp').convert('RGB'))
@@ -181,44 +181,8 @@ def sky(images):
     encode('sky', frames)
 
 
-def embers(images):
-    """D looking up through the fire, with embers rising past him and the red light breathing. The crop leaves out the still's logo."""
-    base = load(images / '9.webp', (0, 48, 480, 216), (1280, 448))
-    h, w = base.shape[:2]
-    rng = random.Random(9)
-    r, g, b = base[:, :, 0], base[:, :, 1], base[:, :, 2]
-    red = cv2.GaussianBlur(np.clip((r - np.maximum(g, b)) * 2.2, 0, 1), (0, 0), 7)[:, :, None]
-    count = 60
-    sparks = [{
-        'x': rng.uniform(0, w), 'y': rng.uniform(0, h + 60), 'laps': rng.choice((1, 1, 2)), 'radius': rng.uniform(1.2, 4.2),
-        'sway': rng.uniform(4, 22), 'swaps': rng.choice((1, 2)), 'phase': rng.uniform(0, math.tau), 'flicker': rng.choice((3, 4, 5)),
-    } for _ in range(70)]
-    frames = []
-    for t in range(count):
-        u = t / count
-        layer = np.zeros((h, w), np.float32)
-        for spark in sparks:
-            y = (spark['y'] - u * (h + 60) * spark['laps']) % (h + 60) - 30
-            x = spark['x'] + math.sin(u * math.tau * spark['swaps'] + spark['phase']) * spark['sway']
-            amount = 0.55 + 0.45 * math.sin(u * math.tau * spark['flicker'] + spark['phase'])
-            cv2.circle(layer, (int(x * 16), int(y * 16)), int(spark['radius'] * 16), float(amount), -1, cv2.LINE_AA, 4)
-        tight = cv2.GaussianBlur(layer, (0, 0), 1.1)[:, :, None]
-        wide = cv2.GaussianBlur(layer, (0, 0), 7)[:, :, None]
-        breath = 0.5 + 0.5 * math.sin(u * math.tau * 2)
-        frame = base + tight * np.array([1.0, 0.62, 0.2], dtype=np.float32) + wide * np.array([0.9, 0.34, 0.08], dtype=np.float32)
-        frame = frame + red * np.array([0.14, 0.02, 0.0], dtype=np.float32) * breath
-        frames.append(tape(grade(frame.clip(0, 1)), t, count, 400))
-    encode('embers', frames)
-
-
-def on_call(images):
-    """The shocked face, for the monitor beside the crash demo. The page adds the shake and scanlines."""
-    face = load(images / '10.webp', (100, 2, 420, 242), (480, 360))
-    Image.fromarray((grade(face) * 255).astype(np.uint8), 'RGB').save(OUT / 'on-call.jpg', quality=84, optimize=True, progressive=True)
-
-
 def floor():
-    """A pixel tile of the hero's floor: dark ground, blue dome lights, and debris, breaking up into dither below."""
+    """A pixel tile of the floor: dark ground, blue dome lights, and debris, breaking up into dither below."""
     w, h = 240, 44
     image = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     px = image.load()
@@ -273,10 +237,10 @@ if __name__ == '__main__':
         sys.exit(__doc__)
     folder = Path(sys.argv[1])
     OUT.mkdir(parents=True, exist_ok=True)
-    crack(folder)
-    duel(folder)
+    for name, file in LOOPS.items():
+        loop(name, folder / file)
+    for name, file in STILLS.items():
+        still(name, folder / file)
     sky(folder)
-    embers(folder)
-    on_call(folder)
     floor()
     scrims()

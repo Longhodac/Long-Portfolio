@@ -404,7 +404,61 @@
     .scenarios dd + dt { margin-top: 8px; }
   }
 
-  /* Your stills, as tape loops ----------------------------------------------------------------- */
+  /* Framed pictures --------------------------------------------------------------------------- */
+  /* A .hang is a safe spot for one frame. It takes no room on wide screens, where frames sit in the gaps around the
+     windows, and becomes its own row on narrow ones. --place and --tilt are random on each load. */
+  .hang { position: relative; height: 0; --top: -96px; --size: 380px; --from: 6%; --to: 52%; }
+  .hang-hero { --top: 72px; --size: 250px; --from: calc(50% - 280px); --to: calc(50% + 140px); }
+  .hang-quests { --top: 16px; --size: 270px; --from: 0%; --to: 40%; }
+  .hang-about { --to: 34%; }
+  .hang-gutter {
+    position: absolute; top: var(--y); display: none; width: calc((100vw - 944px) / 2 - 8px);
+    --top: 0px; --size: clamp(170px, calc((100vw - 944px) / 2 - 60px), 320px); --from: 18px; --to: calc(100% - var(--size) - 18px);
+  }
+  .hang-left { left: 0; }
+  .hang-right { right: 0; }
+  @media (min-width: 1400px) { .hang-gutter { display: block; } }
+  @media (max-width: 1000px) {
+    .hang, .hang-hero, .hang-quests, .hang-about {
+      height: calc(var(--size) * 0.6 + 72px);
+      --top: 30px; --size: min(76vw, 420px); --from: var(--gutter); --to: calc(100% - var(--size) - var(--gutter));
+    }
+    .hang-hero { --top: 56px; height: calc(var(--size) * 0.6 + 96px); }
+    .hang-quests { --from: 0px; --to: calc(100% - var(--size)); }
+  }
+
+  .frame {
+    --tone: var(--cyan);
+    position: absolute; z-index: 0; top: var(--top);
+    left: calc(var(--from) + (var(--to) - var(--from)) * var(--place, 0.5));
+    width: var(--size); margin: 0; padding: 6px;
+    background: var(--night);
+    rotate: var(--tilt, -2deg);
+    box-shadow:
+      0 -3px 0 var(--tone), 0 3px 0 var(--tone), -3px 0 0 var(--tone), 3px 0 0 var(--tone),
+      8px 8px 0 2px rgb(4 6 18 / 0.7);
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--tone) 45%, transparent));
+    transition: rotate 200ms steps(4), scale 200ms steps(4);
+  }
+  .frame:hover { rotate: 0deg; scale: 1.04; }
+  .frame video, .frame img { display: block; width: 100%; height: auto; max-width: none; }
+  /* Scanlines and a soft vignette, for the retro look. */
+  .frame::before {
+    content: ''; position: absolute; inset: 6px; z-index: 1; pointer-events: none;
+    background:
+      repeating-linear-gradient(180deg, rgb(4 6 18 / 0.26) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgb(4 6 18 / 0.5) 100%);
+  }
+  /* The wire and nail it hangs from. */
+  .frame::after {
+    content: ''; position: absolute; left: calc(50% - 34px); bottom: calc(100% + 3px); width: 68px; height: 16px; pointer-events: none;
+    background:
+      linear-gradient(var(--tone), var(--tone)) center top / 6px 6px no-repeat,
+      linear-gradient(to top right, transparent calc(50% - 1px), var(--muted) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) left bottom / 50% 100% no-repeat,
+      linear-gradient(to top left, transparent calc(50% - 1px), var(--muted) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) right bottom / 50% 100% no-repeat;
+  }
+
+  /* The night sky behind Contact ----------------------------------------------------------------- */
   .retro { overflow: hidden; isolation: isolate; background: var(--night); }
   .retro video { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
   .retro::before {
@@ -418,19 +472,6 @@
     background: var(--grain);
     opacity: 0.2;
   }
-  .cut {
-    position: relative; aspect-ratio: 1280 / 448; min-height: 240px; max-height: 66vh; width: 100%;
-    box-shadow: 0 calc(-1 * var(--px)) 0 var(--night), 0 var(--px) 0 var(--night);
-  }
-  .osd {
-    position: absolute; left: 20px; top: 16px; z-index: 2;
-    font: 500 14px/1 var(--mono); letter-spacing: 0.06em; color: #fff;
-    text-shadow: 1.5px 0 0 rgb(255 0 80 / 0.8), -1.5px 0 0 rgb(0 220 255 / 0.8);
-  }
-  .osd::before { content: 'PAUSE ❚❚'; }
-  html[data-fx='on'] .osd::before { content: 'PLAY ►'; }
-  @media (max-width: 600px) { .osd { left: 12px; top: 10px; font-size: 12px; } }
-  .cut-embers video { object-position: 76% 50%; }
 
   /* About -------------------------------------------------------------------------------------- */
   .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
@@ -493,13 +534,13 @@
   .bubble[data-side='above']::after { bottom: -7px; left: calc(var(--tail, 50%) - 3px); width: 6px; height: 7px; background: var(--paper); clip-path: polygon(0 0, 100% 0, 50% 100%); }
 
   @media (forced-colors: active) {
-    .scene, .scanlines, .perch, .hero-scrim, .retro::before, .retro::after { display: none; }
+    .scene, .scanlines, .perch, .hero-scrim, .frame::before, .frame::after, .retro::before, .retro::after { display: none; }
     .win, .btn, .stage, .viz { border: 2px solid CanvasText; }
   }
   @media print {
     html { background: #fff; }
     body { color: #000; }
-    .nav, .scene, .scanlines, .perch, .bubble, .cut, .contact-art, .floor, .hero-scrim, .sim, .quest-tabs, .timeline, .stages, .viz { display: none !important; }
+    .nav, .scene, .scanlines, .perch, .bubble, .hang, .contact-art, .floor, .hero-scrim, .sim, .quest-tabs, .timeline, .stages, .viz { display: none !important; }
     .win, .btn { box-shadow: none; background: none; color: #000; }
     .win-bar { display: none; }
     .sec-title, .quest-panel h3, .project-title a, .release span, .lede em, .meta, .contact-title { color: #000; text-shadow: none; background: none; box-shadow: none; }
@@ -513,17 +554,6 @@
   @supports (animation-timeline: scroll()) {
     .nav-progress { animation: progress linear both; animation-timeline: scroll(root); transform: none; }
     @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  }
-  @supports (animation-timeline: view()) {
-    html[data-fx='on'] .cut video {
-      animation: wipe steps(10) both;
-      animation-timeline: view();
-      animation-range: entry 10% entry 90%;
-    }
-    @keyframes wipe {
-      from { clip-path: inset(50% 0); }
-      to { clip-path: inset(0); }
-    }
   }
   html[data-fx='on'] .retro::after { animation: grain 0.6s steps(5) infinite; }
   @keyframes grain {

@@ -1,6 +1,6 @@
 # Long HoDac portfolio
 
-A static site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and film stills turned into tape-style loops. There is no build step and no runtime dependency, and everything it loads is self-hosted.
+A static site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and the show's GIFs playing in neon frames hung at random around the page. There is no build step and no runtime dependency, and everything it loads is self-hosted.
 
 ## Preview
 
@@ -10,11 +10,11 @@ Run `npm run dev`, then open http://127.0.0.1:4173. The server requires Python 3
 
 - `dist/index.html` holds all page content. Job and project bullets come straight from the résumé.
 - `dist/styles.css` holds the design tokens, layout, and motion, split into cascade layers.
-- `dist/script.js` runs the tabs, crash demo, copy button, effects toggle, loops, and section tracking. It lazy-loads the diagrams, the city, and Capri.
+- `dist/script.js` runs the tabs, crash demo, copy button, effects toggle, framed pictures, and section tracking. It lazy-loads the diagrams, the city, and Capri.
 - `dist/scene.js` draws the pixel city on a low-resolution canvas. Colours are in `STOPS`, and the towers come from seeded random numbers, so they're the same on every visit.
 - `dist/viz.js` draws the animated diagrams. Flow diagrams are tables of nodes, wires, and timed moves, so editing one means editing data. Each `<figure data-viz="name">` in the HTML picks one.
 - `dist/capri.js` draws and animates Capri and her speech bubble. Where she goes is set in the HTML: each `.perch` element names a pose and a position with `data-pose`, `data-x`, and `data-y`. What she says on arrival is the section's `data-line`.
-- `tools/build_art.py` makes the tape loops, posters, floor, and dither tiles in `dist/assets/art/`. Run `npm run art -- /path/to/stills`. It needs numpy, OpenCV, Pillow, and ffmpeg. The stills are show frames, so they aren't in this repository.
+- `tools/build_art.py` makes the loops, posters, floor, and dither tiles in `dist/assets/art/`. Run `npm run art -- /path/to/sources`. It needs numpy, OpenCV, Pillow, and ffmpeg. The source GIFs and stills are show footage, so they aren't in this repository, and the script lists the file names it expects.
 
 Run `npm run check` to check JavaScript syntax. Deploy `dist/` as static files. `.openai/hosting.json` stores the existing private Sites project.
 
@@ -22,7 +22,15 @@ Run `npm run check` to check JavaScript syntax. Deploy `dist/` as static files. 
 
 ## What's pixel art and what isn't
 
-The city, the hero's floor, the logo, the window frames, and the big section titles are pixel art. Capri, the loops, the diagrams, and all reading text aren't, so they stay sharp and easy to read.
+The city, the hero's floor, the logo, the window frames, and the big section titles are pixel art. Capri, the framed GIFs, the sky, the diagrams, and all reading text aren't, so they stay sharp and easy to read.
+
+## Framed pictures
+
+Each GIF plays whole, uncropped and at full length, with VHS-style colour and scanlines but no added motion. The cracked-face picture is a still because it has no GIF.
+
+Every page load shuffles the pictures across a list of safe spots, each one a `.hang` element in the HTML, and picks a new position, tilt, and frame colour. Spots sit in the gaps between windows, plus the side margins on screens at least 1400px wide. On narrower screens each spot becomes its own row, so all the pictures still show. Frames sit behind the windows, so they can't cover text. To add a spot, add a `.hang` and give it a range with `--from` and `--to`.
+
+The night sky stays at the end of the page rather than in a frame. It's the first shot of its GIF with the lights made to twinkle, and the small Capri in it is painted out so the live one can stand there looking up.
 
 ## How Capri works
 
@@ -57,7 +65,7 @@ This is unofficial fan work, and parts of it aren't covered by any license:
 
 - The drawing code in `dist/capri.js` is adapted from capri-companion, under MIT. See `dist/capri-companion-LICENSE.txt`.
 - `dist/assets/capri/model.json` is traced from frames of the show, and that repo's MIT license excludes it. Its rights sit with CD PROJEKT RED, Studio Trigger, and Netflix.
-- The loops, posters, and monitor image in `dist/assets/art/` (`crack`, `duel`, `embers`, `sky`, `on-call`) are derived from show frames, with the same rights holders.
+- The videos and pictures in `dist/assets/art/` (`crack`, `duel`, `embers`, `roman`, `sky`) are derived from show footage, with the same rights holders. `embers` also includes the show's logo, because it's the whole GIF.
 
 CD PROJEKT RED's fan content guidelines rule out commercial use and ask fan work to carry a notice that it is unofficial. The page doesn't currently show one. The guidelines don't cover Edgerunners material, which also involves Netflix and Studio Trigger. Remove these assets before using this version somewhere that could count as commercial.
 
@@ -71,11 +79,11 @@ Experience, projects, education, and skills come from Long's résumé. The pipel
 
 The page is complete without any of these. They are added with `@supports` or feature checks:
 
-- Scroll-driven animations for the nav progress bar and the cutscene wipes
+- Scroll-driven animations for the nav progress bar
 - `clip`-based overflow, so Capri can hang off the page's edge without creating sideways scrolling
 
 ## Accessibility and performance
 
-Semantic landmarks, a skip link, visible focus, and the WAI-ARIA tabs pattern with arrow, Home, and End keys for the job list and the pipeline. The header's effects toggle stops the loops, city, diagrams, simulation, and Capri's movement, and the choice is remembered. Effects start off for `prefers-reduced-motion` and data-saver users. Capri, the city, the loops, and the diagrams are decorative and hidden from screen readers, since the bullets and stat tiles carry the same facts, though her eyes do follow keyboard focus. Without JavaScript all the content still shows, with a still of the city behind it and every job and pipeline note listed.
+Semantic landmarks, a skip link, visible focus, and the WAI-ARIA tabs pattern with arrow, Home, and End keys for the job list and the pipeline. The header's effects toggle stops the videos, city, diagrams, simulation, and Capri's movement, and the choice is remembered. Effects start off for `prefers-reduced-motion` and data-saver users. Capri, the city, the framed pictures, and the diagrams are decorative and hidden from screen readers, since the bullets and stat tiles carry the same facts, though her eyes do follow keyboard focus. Without JavaScript all the content still shows, with a still of the city behind it and every job and pipeline note listed.
 
-The city is a low-resolution canvas redrawn on scroll and twelve times a second. Only the largest loop on screen plays, because Chrome drops the whole page to about 16 fps while two videos play at once. Phones get smaller files. Everything stops when the tab is hidden.
+The city is a low-resolution canvas redrawn on scroll and twelve times a second. Only the largest video on screen plays, because Chrome drops the whole page to about 16 fps while two videos play at once. Everything stops when the tab is hidden.
