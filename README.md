@@ -1,6 +1,6 @@
 # Long HoDac portfolio
 
-A static site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and the show's GIFs playing in neon frames hung at random around the page. There is no build step and no runtime dependency, and everything it loads is self-hosted.
+A static site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and the show's GIFs playing in neon frames hung around the page. There is no build step and no runtime dependency, and everything it loads is self-hosted.
 
 ## Preview
 
@@ -28,7 +28,7 @@ The city, the hero's floor, the logo, the window frames, and the big section tit
 
 Each GIF plays whole, uncropped and at full length, with VHS-style colour and scanlines but no added motion. The cracked-face picture is a still because it has no GIF.
 
-Every page load shuffles the pictures across a list of safe spots, each one a `.hang` element in the HTML, and picks a new position, tilt, and frame colour. Spots sit in the gaps between windows, plus the side margins on screens at least 1400px wide. On narrower screens each spot becomes its own row, so all the pictures still show. Frames sit behind the windows, so they can't cover text. To add a spot, add a `.hang` and give it a range with `--from` and `--to`.
+Each picture has a fixed spot in the gap between two sections, chosen to suit it: Roman looking shocked above Work, the cracked face leading into the crash demo in Projects, the Capri and D fight before About, and D looking up through the embers right above the sky. Each spot is a `.hang` element in the HTML, and its position, tilt, and frame colour are CSS variables on that class. On screens up to 1000px wide each spot becomes its own row, alternating left and right. Frames sit behind the windows, so they can't cover text.
 
 The night sky stays at the end of the page rather than in a frame. It's the first shot of its GIF with the lights made to twinkle, and the small Capri in it is painted out so the live one can stand there looking up.
 
