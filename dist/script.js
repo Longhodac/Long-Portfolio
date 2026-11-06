@@ -253,39 +253,6 @@ function syncVideos() {
   });
 }
 
-// Every load hangs the pictures in different spots, with a different tilt and frame colour. The spots themselves are
-// all clear of the text, and which ones exist depends on how wide the page is.
-const shuffled = list => {
-  const out = [...list];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-};
-const hangs = shuffled(document.querySelectorAll('.hang'));
-const pictures = shuffled(document.querySelectorAll('.frame > video, .frame > img'));
-const tones = shuffled(['--cyan', '--crimson', '--yellow', '--green', '--violet']);
-
-hangs.forEach(hang => {
-  const tilt = (1.5 + Math.random() * 3) * (Math.random() < 0.5 ? -1 : 1);
-  hang.style.setProperty('--tilt', `${tilt.toFixed(2)}deg`);
-  hang.style.setProperty('--place', Math.random().toFixed(3));
-});
-
-function hangPictures() {
-  const open = hangs.filter(hang => getComputedStyle(hang).display !== 'none');
-  hangs.forEach(hang => { hang.firstElementChild.hidden = true; });
-  pictures.forEach((picture, i) => {
-    const frame = open[i] && open[i].firstElementChild;
-    if (!frame) return;
-    if (picture.parentElement !== frame) frame.append(picture);
-    frame.style.setProperty('--tone', `var(${tones[i]})`);
-    frame.hidden = false;
-  });
-  syncVideos();
-}
-
 const videoObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     const { width, height } = entry.intersectionRect;
@@ -294,9 +261,6 @@ const videoObserver = new IntersectionObserver(entries => {
   syncVideos();
 }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
 videos.forEach(video => videoObserver.observe(video));
-
-hangPictures();
-['(min-width: 1001px)', '(min-width: 1400px)'].forEach(query => matchMedia(query).addEventListener('change', hangPictures));
 
 function applyEffects() {
   root.dataset.fx = effectsOn ? 'on' : 'off';

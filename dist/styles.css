@@ -405,35 +405,29 @@
   }
 
   /* Framed pictures --------------------------------------------------------------------------- */
-  /* A .hang is a safe spot for one frame. It takes no room on wide screens, where frames sit in the gaps around the
-     windows, and becomes its own row on narrow ones. --place and --tilt are random on each load. */
-  .hang { position: relative; height: 0; --top: -96px; --size: 380px; --from: 6%; --to: 52%; }
-  .hang-hero { --top: 72px; --size: 250px; --from: calc(50% - 280px); --to: calc(50% + 140px); }
-  .hang-quests { --top: 16px; --size: 270px; --from: 0%; --to: 40%; }
-  .hang-about { --to: 34%; }
-  .hang-gutter {
-    position: absolute; top: var(--y); display: none; width: calc((100vw - 944px) / 2 - 8px);
-    --top: 0px; --size: clamp(170px, calc((100vw - 944px) / 2 - 60px), 320px); --from: 18px; --to: calc(100% - var(--size) - 18px);
-  }
-  .hang-left { left: 0; }
-  .hang-right { right: 0; }
-  @media (min-width: 1400px) { .hang-gutter { display: block; } }
+  /* Each .hang holds one frame in the gap between two sections. It takes no room on wide screens, where the frame sits
+     in the padding around the windows, and becomes its own row on narrow ones. */
+  .hang { position: relative; height: 0; --top: -96px; --size: 380px; }
+  .hang-hero { --top: 72px; --size: 250px; --left: calc(50% - 270px); --tilt: 3deg; --tone: var(--green); }
+  .hang-work { --left: calc(54% - 190px); --tilt: -2.5deg; --tone: var(--yellow); }
+  .hang-about { --left: calc(30% - 190px); --tilt: 2deg; --tone: var(--violet); }
+  .hang-sky { height: 170px; --left: calc(50% - 190px); --tilt: -2deg; --tone: var(--cyan); }
   @media (max-width: 1000px) {
-    .hang, .hang-hero, .hang-quests, .hang-about {
+    .hang, .hang-hero, .hang-about, .hang-sky {
       height: calc(var(--size) * 0.6 + 72px);
-      --top: 30px; --size: min(76vw, 420px); --from: var(--gutter); --to: calc(100% - var(--size) - var(--gutter));
+      --top: 30px; --size: min(76vw, 420px);
     }
-    .hang-hero { --top: 56px; height: calc(var(--size) * 0.6 + 96px); }
-    .hang-quests { --from: 0px; --to: calc(100% - var(--size)); }
+    .hang-hero { --top: 56px; height: calc(var(--size) * 0.6 + 96px); --left: var(--gutter); }
+    .hang-work { --left: calc(100% - var(--size) - var(--gutter)); }
+    .hang-about { --left: var(--gutter); }
+    .hang-sky { --left: calc(100% - var(--size) - var(--gutter)); }
   }
 
   .frame {
-    --tone: var(--cyan);
-    position: absolute; z-index: 0; top: var(--top);
-    left: calc(var(--from) + (var(--to) - var(--from)) * var(--place, 0.5));
+    position: absolute; z-index: 0; top: var(--top); left: var(--left);
     width: var(--size); margin: 0; padding: 6px;
     background: var(--night);
-    rotate: var(--tilt, -2deg);
+    rotate: var(--tilt);
     box-shadow:
       0 -3px 0 var(--tone), 0 3px 0 var(--tone), -3px 0 0 var(--tone), 3px 0 0 var(--tone),
       8px 8px 0 2px rgb(4 6 18 / 0.7);
@@ -496,7 +490,8 @@
     mask-image: linear-gradient(to bottom, transparent, #000 96px);
   }
   .contact-art video { object-position: center bottom; }
-  .contact .perch { top: auto; height: var(--art-height); }
+  /* She stands at the perch's right edge. Her hair reaches 146px past that, which leaves 56px before the window. */
+  .contact .perch { top: auto; right: calc(460px + var(--gutter) + 202px); height: var(--art-height); }
   .contact-win { width: min(100%, 460px); }
   .contact-title { font: 400 50px/50px var(--display); color: var(--yellow); margin-bottom: 10px; }
   .contact-mail { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; font: 500 20px/28px var(--mono); }
@@ -506,9 +501,14 @@
   .copy-status { font: 400 12px/18px var(--mono); color: var(--green); }
   .contact .hero-actions { margin-top: 18px; }
   @media (max-width: 1000px) {
-    .contact { --art-height: clamp(320px, 62vw, 520px); display: block; padding-top: calc(var(--art-height) + 16px); padding-bottom: 48px; }
-    .contact-art { top: 0; bottom: auto; }
-    .contact .perch { top: 0; }
+    .contact { --art-height: clamp(400px, 96vw, 560px); display: block; padding-top: calc(var(--art-height) + 40px); padding-bottom: 48px; }
+    .contact-art {
+      top: 0; bottom: auto;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 44px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 44px), transparent);
+    }
+    /* Stacked, she stands in the middle with some ground under her feet, well above the window. */
+    .contact .perch { top: 0; right: 50%; height: calc(var(--art-height) - 48px); }
     .contact-win { position: relative; z-index: 2; width: 100%; }
   }
 
