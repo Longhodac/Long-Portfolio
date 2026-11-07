@@ -16,7 +16,7 @@ Run `npm run dev`, then open http://127.0.0.1:4173. The server requires Python 3
 - `dist/capri.js` draws and animates Capri and her speech bubble. Where she goes is set in the HTML: each `.perch` element names a pose and a position with `data-pose`, `data-x`, and `data-y`. What she says on arrival is the section's `data-line`.
 - `tools/build_art.py` makes the loops, posters, floor, and dither tiles in `dist/assets/art/`. Run `npm run art -- /path/to/sources`. It needs numpy, OpenCV, Pillow, and ffmpeg. The source GIFs and stills are show footage, so they aren't in this repository, and the script lists the file names it expects.
 
-Run `npm run check` to check JavaScript syntax. Deploy `dist/` as static files. `.openai/hosting.json` stores the existing private Sites project.
+Run `npm run check` to check JavaScript syntax. Deploy `dist/` as static files. The site is live on Vercel at https://long-portfolio-ten.vercel.app, with `dist/` as its root. `dist/index.html` uses that address in four places: `og:url`, `og:image`, the canonical link, and the structured data. Update them if the address changes. `.openai/hosting.json` stores the older private Sites project.
 
 `dist/assets/art/logo.png` was drawn once from Saira italic, thresholded to pixels. `dist/assets/art/city.png` is a capture of the city, used before JavaScript runs. `dist/assets/social.jpg` is a screenshot of the hero at 1200×630.
 
