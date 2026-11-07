@@ -165,8 +165,6 @@
   .hero-title img { width: calc(var(--logo) * var(--px)); max-width: 100%; height: auto; image-rendering: pixelated; }
   .lede { margin-top: 28px; max-width: 580px; font-size: 18px; line-height: 1.55; }
   .lede em { font-style: normal; font-weight: 500; color: var(--cyan); }
-  .release { margin-top: 20px; font: 500 20px/1.2 var(--mono); }
-  .release span { color: var(--yellow); }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 28px; }
   .floor {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
@@ -543,7 +541,7 @@
     .nav, .scene, .scanlines, .perch, .bubble, .hang, .contact-art, .floor, .hero-scrim, .sim, .quest-tabs, .timeline, .stages, .viz { display: none !important; }
     .win, .btn { box-shadow: none; background: none; color: #000; }
     .win-bar { display: none; }
-    .sec-title, .quest-panel h3, .project-title a, .release span, .lede em, .meta, .contact-title { color: #000; text-shadow: none; background: none; box-shadow: none; }
+    .sec-title, .quest-panel h3, .project-title a, .lede em, .meta, .contact-title { color: #000; text-shadow: none; background: none; box-shadow: none; }
     .section, .contact, .hero { padding: 16px 0; min-height: 0; }
     .quest-panel[hidden], .stage-panel[hidden] { display: block !important; }
     .quest-panel:not([hidden]) { display: block; }
