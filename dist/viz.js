@@ -364,6 +364,222 @@ const uploadsFlow = flow({
   ]
 });
 
+// One request to STRATOS. Each trip to a tool and back is a round of the loop, which stops at five or when the
+// model answers in plain text.
+const ROUND_STARTS = [0.6, 2.2, 3.7, 5.2, 6.1];
+const agentLoopFlow = flow({
+  period: 7.6,
+  still: 4.2,
+  height: 148,
+  nodes: {
+    you: { label: 'You', x: 0.07, y: 0.5 },
+    llm: { label: 'Groq LLM', short: 'LLM', x: 0.34, y: 0.5 },
+    discover: { label: 'Discover', x: 0.86, y: 0.17 },
+    research: { label: 'Research', x: 0.86, y: 0.5 },
+    scrape: { label: 'Scrape', x: 0.86, y: 0.83 }
+  },
+  wires: {
+    ask: [[0.07, 0.5], [0.34, 0.5]],
+    discover: [[0.34, 0.5], [0.6, 0.5], [0.6, 0.17], [0.86, 0.17]],
+    research: [[0.34, 0.5], [0.86, 0.5]],
+    scrape: [[0.34, 0.5], [0.6, 0.5], [0.6, 0.83], [0.86, 0.83]]
+  },
+  moves: [
+    leg('ask', 0, 0.6, { hit: 'llm', color: C.cyan }),
+    ...['discover', 'research', 'scrape'].flatMap((tool, i) => [
+      leg(tool, ROUND_STARTS[i] + 0.3, 0.5, { hit: tool }),
+      leg(tool, ROUND_STARTS[i] + 0.95, 0.5, { span: [1, 0], hit: 'llm' })
+    ]),
+    leg('ask', 5.5, 0.6, { span: [1, 0], hit: 'you', color: C.cyan })
+  ],
+  cues: [{ node: 'you', from: 6.1, to: 7.6, tone: 'good' }],
+  notes: [
+    ...ROUND_STARTS.slice(0, 4).map((from, i) => ({ text: `Round ${i + 1} of 5`, x: 0.34, y: 0.17, from, to: ROUND_STARTS[i + 1] })),
+    { text: 'Draft ready', x: 0.34, y: 0.17, from: ROUND_STARTS[4], to: 7.6, mark: C.green }
+  ]
+});
+
+// Nebula's four mastery tiers and when the concept in the picture clears each one. Reading creeps up to its cap,
+// and each of the other three is one graded answer.
+function nebula() {
+  const TIERS = [
+    { name: 'Exposure', how: 'read', top: 0.4, color: C.cyan, from: 0.8, takes: 1.8 },
+    { name: 'Recall', how: 'quiz', top: 0.6, color: C.violet, from: 3.5, takes: 0.3 },
+    { name: 'Synthesis', how: 'write', top: 0.8, color: C.yellow, from: 4.8, takes: 0.3 },
+    { name: 'Feynman', how: 'speak', top: 1, color: C.green, from: 6.1, takes: 0.3 }
+  ];
+  // A made-up course graph of [x, y, tiers already cleared]. The first node is the concept being studied.
+  const NODES = [[0.5, 0.5, 0], [0.12, 0.2, 1], [0.34, 0.04, 0], [0.8, 0.14, 2], [0.94, 0.62, 0], [0.66, 0.96, 1], [0.28, 0.9, 4], [0.05, 0.6, 0]];
+  const EDGES = [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [1, 2], [1, 7], [3, 4], [5, 6], [6, 7]];
+  const floorOf = i => (i ? TIERS[i - 1].top : 0);
+
+  return {
+    period: 8.4,
+    still: 4,
+    height: narrow => (narrow ? 240 : 156),
+    draw(g, t, w, h) {
+      const narrow = w < NARROW;
+      const label = narrow ? LABEL_SMALL : LABEL;
+      const stage = TIERS.findLastIndex(tier => t >= tier.from);
+      const current = TIERS[stage];
+      const confidence = current ? lerp(floorOf(stage), current.top, smooth(clamp((t - current.from) / current.takes, 0, 1))) : 0;
+
+      g.font = label;
+      g.textBaseline = 'middle';
+      g.textAlign = 'left';
+      g.fillStyle = C.muted;
+      g.fillText('Confidence', 0, 9);
+      g.fillStyle = current ? current.color : C.text;
+      g.fillText(confidence.toFixed(2), g.measureText('Confidence ').width, 9);
+
+      const box = narrow ? { x: 0, y: 24, w, h: 92 } : { x: 0, y: 26, w: w * 0.5, h: h - 34 };
+      const place = ([x, y]) => [Math.round(box.x + 10 + x * (box.w - 20)), Math.round(box.y + 8 + y * (box.h - 16))];
+      g.lineWidth = 1;
+      for (const [a, b] of EDGES) {
+        const [ax, ay] = place(NODES[a]);
+        const [bx, by] = place(NODES[b]);
+        g.strokeStyle = a === 0 && current ? C.hot : C.line;
+        g.beginPath();
+        g.moveTo(ax + 0.5, ay + 0.5);
+        g.lineTo(bx + 0.5, by + 0.5);
+        g.stroke();
+      }
+      NODES.forEach((node, i) => {
+        const [x, y] = place(node);
+        const tier = i === 0 ? current : TIERS[node[2] - 1];
+        const half = i === 0 ? 7 : 4;
+        g.fillStyle = tier ? tier.color : C.panel;
+        g.fillRect(x - half, y - half, half * 2, half * 2);
+        if (!tier) {
+          g.strokeStyle = C.hot;
+          g.strokeRect(x - half + 0.5, y - half + 0.5, half * 2 - 1, half * 2 - 1);
+        }
+      });
+      const [focusX, focusY] = place(NODES[0]);
+      g.lineWidth = 2;
+      g.strokeStyle = C.text;
+      g.strokeRect(focusX - 10, focusY - 10, 20, 20);
+      g.textAlign = 'center';
+      TIERS.forEach((tier, i) => {
+        const u = (t - tier.from - tier.takes) / 0.9;
+        if (u < 0 || u > 1) return;
+        g.globalAlpha = 1 - u;
+        g.strokeStyle = tier.color;
+        g.strokeRect(focusX - 12 - u * 12, focusY - 12 - u * 12, 24 + u * 24, 24 + u * 24);
+        g.fillStyle = tier.color;
+        g.fillText(`+${(tier.top - floorOf(i)).toFixed(1)}`, focusX, focusY - 22 - u * 10);
+        g.globalAlpha = 1;
+      });
+
+      const rowH = narrow ? 26 : 30;
+      const top = narrow ? 128 : Math.round((h - rowH * 4) / 2);
+      const meterX = (narrow ? 0 : Math.round(w * 0.56)) + 28;
+      const textX = meterX + 22;
+      g.fillStyle = C.line;
+      g.fillRect(meterX, top, 8, rowH * 4);
+      TIERS.forEach((tier, i) => {
+        const filled = Math.round(clamp((confidence - floorOf(i)) / (tier.top - floorOf(i)), 0, 1) * rowH);
+        g.fillStyle = tier.color;
+        g.fillRect(meterX, top + rowH * (4 - i) - filled, 8, filled);
+      });
+      g.font = LABEL_SMALL;
+      g.textAlign = 'right';
+      ['0', ...TIERS.map(tier => tier.top.toFixed(1))].forEach((mark, i) => {
+        g.fillStyle = C.night;
+        g.fillRect(meterX, top + rowH * (4 - i) - 1, 8, 2);
+        g.fillStyle = C.muted;
+        g.fillText(mark, meterX - 6, top + rowH * (4 - i));
+      });
+      TIERS.forEach((tier, i) => {
+        const y = top + rowH * (3 - i);
+        const mid = y + rowH / 2;
+        if (i === stage) {
+          g.fillStyle = C.plane;
+          g.fillRect(textX - 8, y + 2, w - textX + 8, rowH - 4);
+          g.fillStyle = tier.color;
+          g.fillRect(textX - 8, y + 2, 2, rowH - 4);
+        }
+        if (i <= stage) {
+          g.fillStyle = tier.color;
+          g.fillRect(textX, mid - 4, 8, 8);
+        } else {
+          g.lineWidth = 1;
+          g.strokeStyle = C.hot;
+          g.strokeRect(textX + 0.5, mid - 3.5, 7, 7);
+        }
+        g.font = label;
+        g.textAlign = 'left';
+        g.fillStyle = i <= stage ? C.text : C.muted;
+        g.fillText(tier.name, textX + 16, mid);
+        g.textAlign = 'right';
+        g.fillStyle = i === stage ? C.text : C.muted;
+        g.fillText(tier.how, w - 8, mid);
+      });
+    }
+  };
+}
+
+// One page at each device profile in the Triton Droids Playwright suite. A page is a list of blocks,
+// [x, y, width, height, kind], in fractions of the screen.
+function screens() {
+  const WIDE = [
+    [0, 0, 0.16, 0.06, 'nav'], [0.62, 0.01, 0.1, 0.04, 'text'], [0.76, 0.01, 0.1, 0.04, 'text'], [0.9, 0.01, 0.1, 0.04, 'text'],
+    [0, 0.17, 0.44, 0.05, 'text'], [0, 0.27, 0.36, 0.05, 'text'], [0, 0.42, 0.2, 0.1, 'cta'], [0.56, 0.14, 0.44, 0.42, 'art'],
+    [0, 0.68, 0.3, 0.32, 'card'], [0.35, 0.68, 0.3, 0.32, 'card'], [0.7, 0.68, 0.3, 0.32, 'card']
+  ];
+  const TALL = [
+    [0, 0, 0.4, 0.04, 'nav'], [0.78, 0, 0.22, 0.04, 'text'], [0, 0.09, 1, 0.24, 'art'],
+    [0, 0.38, 0.9, 0.04, 'text'], [0, 0.45, 0.7, 0.04, 'text'], [0, 0.53, 0.5, 0.07, 'cta'],
+    [0, 0.66, 1, 0.14, 'card'], [0, 0.83, 1, 0.14, 'card']
+  ];
+  const DEVICES = [{ name: 'Desktop Chrome', page: WIDE }, { name: 'Pixel 7', page: TALL }, { name: 'iPhone 13', page: TALL }];
+  const TONE = { nav: C.hot, text: C.muted, art: C.violet, cta: C.yellow, card: C.cyan };
+  const FIRST = 0.4;
+  const EVERY = 1.8;
+  const SWEEP = 1.3;
+  const INSET = 6;
+
+  return {
+    period: 7.6,
+    still: 6.6,
+    height: narrow => (narrow ? 132 : 164),
+    draw(g, t, w, h) {
+      const frameH = h - 26;
+      const tallW = Math.round(frameH * 0.5);
+      const wideW = Math.min(Math.round(frameH * 1.6), w - tallW * 2 - 22);
+      const gap = clamp(Math.floor((w - wideW - tallW * 2) / 4), 10, 56);
+      let x = Math.round((w - wideW - tallW * 2 - gap * 2) / 2);
+      g.font = w < NARROW ? LABEL_SMALL : LABEL;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.lineWidth = 2;
+      DEVICES.forEach((device, i) => {
+        const frameW = device.page === WIDE ? wideW : tallW;
+        const u = clamp((t - FIRST - i * EVERY) / SWEEP, 0, 1);
+        const sweeping = u > 0 && u < 1;
+        g.fillStyle = C.plane;
+        g.fillRect(x, 0, frameW, frameH);
+        for (const [bx, by, bw, bh, kind] of device.page) {
+          g.fillStyle = by + bh / 2 <= u ? TONE[kind] : C.line;
+          g.fillRect(
+            Math.round(x + INSET + bx * (frameW - INSET * 2)), Math.round(INSET + by * (frameH - INSET * 2)),
+            Math.max(2, Math.round(bw * (frameW - INSET * 2))), Math.max(2, Math.round(bh * (frameH - INSET * 2)))
+          );
+        }
+        g.strokeStyle = sweeping ? C.cyan : u ? C.hot : C.line;
+        g.strokeRect(x + 1, 1, frameW - 2, frameH - 2);
+        if (sweeping) {
+          g.fillStyle = C.yellow;
+          g.fillRect(x, Math.round(u * frameH) - 1, frameW, 2);
+        }
+        g.fillStyle = u ? C.text : C.muted;
+        g.fillText(device.name, x + frameW / 2, frameH + 14);
+        x += frameW + gap;
+      });
+    }
+  };
+}
+
 function waffle() {
   const r = prng(46);
   const order = [...Array(100).keys()];
@@ -676,7 +892,8 @@ function rerank() {
 
 const DIAGRAMS = {
   runbooks: runbooksFlow, triage: triageFlow, billing: billingFlow, uploads: uploadsFlow,
-  waffle: waffle(), race: race(), hnsw: hnsw(), rerank: rerank()
+  waffle: waffle(), race: race(), hnsw: hnsw(), rerank: rerank(),
+  nebula: nebula(), agentloop: agentLoopFlow, screens: screens()
 };
 
 function decode(el) {
@@ -697,7 +914,8 @@ function decode(el) {
 export function startViz() {
   const root = document.documentElement;
   const effectsOn = () => root.dataset.fx !== 'off';
-  const items = [...document.querySelectorAll('[data-viz]')].map(el => {
+  // A figure naming a diagram this file doesn't have stays hidden, which is what a stale cached copy would hit.
+  const items = [...document.querySelectorAll('[data-viz]')].filter(el => DIAGRAMS[el.dataset.viz]).map(el => {
     el.hidden = false;
     const canvas = el.querySelector('canvas');
     return { el, canvas, g: canvas.getContext('2d'), spec: DIAGRAMS[el.dataset.viz], w: 0, h: 0, dpr: 1, visible: false, start: 0 };

@@ -150,124 +150,177 @@
 
         <div class="win-wrap">
           <div class="perch" data-perch data-pose="sit" data-x="0.86" data-y="0" data-wide-pose="crouch" data-wide-x="1.14" data-wide-y="0.3"></div>
-          <article class="win" aria-labelledby="logplat-title">
-            <p class="win-bar"><span>Main quest</span><i aria-hidden="true"></i></p>
-            <div class="win-body">
-              <h3 class="project-title" id="logplat-title"><a href="https://github.com/Longhodac/log-plat" target="_blank" rel="noopener noreferrer">Distributed Log Ingestion Pipeline<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
-              <ul class="bullets">
-                <li>Built a Go/Kafka pipeline with durable spooling and idempotent writes, with zero loss in 17 tests on 1.02M logs</li>
-                <li>Processed 70K logs/sec in local tests, cutting repeat-query latency 23× via Redis caching and OpenSearch indexing</li>
-              </ul>
-              <ul class="stats stats-row" aria-label="Key numbers"><li><b>0</b><span>logs lost</span></li><li><b>17</b><span>tests</span></li><li><b>1.02M</b><span>logs tested</span></li><li><b>70K</b><span>logs/sec, local tests</span></li><li><b>23×</b><span>lower repeat-query latency</span></li></ul>
-              <figure class="viz" data-viz="race" hidden><canvas aria-hidden="true"></canvas><figcaption>The same repeat query, before and after caching. 23× is the measured ratio, and the speed shown is illustrative.</figcaption></figure>
-              <ul class="tags" aria-label="Technologies"><li>Go</li><li>gRPC</li><li>Kafka</li><li>Redis</li><li>OpenSearch</li><li>Chaos Testing</li></ul>
-
-              <div class="pipeline" data-tabs role="group" aria-labelledby="pipeline-caption">
-                <p id="pipeline-caption" class="pipeline-caption"><b>Pipeline</b> <span>Select a stage to see what happens when it fails</span></p>
-                <div class="stages" role="tablist" aria-label="Pipeline stages" aria-orientation="horizontal">
-                  <canvas class="stages-canvas" aria-hidden="true"></canvas>
-                  <button class="stage" type="button" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="true">agent</button>
-                  <span class="edge" aria-hidden="true"><span>gRPC</span></span>
-                  <button class="stage" type="button" role="tab" id="tab-collector" aria-controls="panel-collector" aria-selected="false" tabindex="-1">collector</button>
-                  <span class="edge" aria-hidden="true"><span>acks=all</span></span>
-                  <button class="stage" type="button" role="tab" id="tab-kafka" aria-controls="panel-kafka" aria-selected="false" tabindex="-1">kafka</button>
-                  <span class="edge" aria-hidden="true"><span>poll</span></span>
-                  <button class="stage" type="button" role="tab" id="tab-indexer" aria-controls="panel-indexer" aria-selected="false" tabindex="-1">indexer</button>
-                  <span class="edge" aria-hidden="true"><span>_bulk</span></span>
-                  <button class="stage" type="button" role="tab" id="tab-opensearch" aria-controls="panel-opensearch" aria-selected="false" tabindex="-1">opensearch</button>
-                </div>
-                <div class="sim" hidden>
-                  <div class="sim-controls">
-                    <button class="btn crash" type="button">Crash <span class="crash-name">agent</span></button>
-                    <p class="sim-readout" aria-hidden="true"><span>read <b data-count="read">0</b></span><span>indexed <b data-count="indexed">0</b></span><span>in flight <b data-count="waiting">0</b></span><span>lost <b data-count="lost">0</b></span></p>
-                    <p class="sim-note">An illustration of the delivery rules, not measured data.</p>
-                    <p class="sr-only sim-status" role="status"></p>
-                  </div>
-                  <div class="crt" aria-hidden="true"><img src="/assets/art/roman.jpg" alt="" width="840" height="494" loading="lazy" decoding="async"><span class="crt-label"></span></div>
-                </div>
-                <div class="stage-panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent" tabindex="0">
-                  <h4 class="panel-title">agent</h4>
-                  <dl>
-                    <dt>Does</dt><dd>Tails log files and gives each line an ID from its file position. Each batch is written to a disk spool with fsync before it’s sent.</dd>
-                    <dt>If it fails</dt><dd>Spooled batches survive the crash. A batch is deleted only after the collector acks it, so anything unacknowledged is resent on restart.</dd>
-                  </dl>
-                </div>
-                <div class="stage-panel" role="tabpanel" id="panel-collector" aria-labelledby="tab-collector" tabindex="0">
-                  <h4 class="panel-title">collector</h4>
-                  <dl>
-                    <dt>Does</dt><dd>gRPC server. Checks the API key, rejects invalid entries, and publishes to Kafka partitioned by service, waiting for all replicas to confirm.</dd>
-                    <dt>If it fails</dt><dd>It acks the agent only after Kafka confirms the write. No ack means the agent keeps the batch and resends it with exponential backoff.</dd>
-                  </dl>
-                </div>
-                <div class="stage-panel" role="tabpanel" id="panel-kafka" aria-labelledby="tab-kafka" tabindex="0">
-                  <h4 class="panel-title">kafka</h4>
-                  <dl>
-                    <dt>Does</dt><dd>Buffers records between ingestion and indexing, so a slow indexer doesn’t push back on the agents.</dd>
-                    <dt>If it fails</dt><dd>The collector can’t get a confirmed write, so it never acks. Batches stay in the agents’ spools until Kafka is back.</dd>
-                  </dl>
-                </div>
-                <div class="stage-panel" role="tabpanel" id="panel-indexer" aria-labelledby="tab-indexer" tabindex="0">
-                  <h4 class="panel-title">indexer</h4>
-                  <dl>
-                    <dt>Does</dt><dd>Kafka consumer group. Bulk-writes into daily indices and commits its offsets only after OpenSearch accepts the writes. Records it can’t parse go to a dead-letter topic.</dd>
-                    <dt>If it fails</dt><dd>A crash between the write and the commit means Kafka redelivers those records. They carry the same IDs, so they overwrite the earlier copies.</dd>
-                  </dl>
-                </div>
-                <div class="stage-panel" role="tabpanel" id="panel-opensearch" aria-labelledby="tab-opensearch" tabindex="0">
-                  <h4 class="panel-title">opensearch</h4>
-                  <dl>
-                    <dt>Does</dt><dd>Stores each line as a document keyed by its log ID. The query API on top supports filters by time, service, level, and text, with cursor pagination.</dd>
-                    <dt>If it fails</dt><dd>The indexer retries failed items and holds off on committing, so the records wait in Kafka until OpenSearch recovers.</dd>
-                  </dl>
+          <div class="win board" data-tabs>
+            <p class="win-bar"><span>Quest board</span><span class="board-pips" aria-hidden="true"></span><i aria-hidden="true"></i></p>
+            <div class="board-body">
+              <div class="board-side">
+                <div class="board-rail" role="tablist" aria-label="Projects" aria-orientation="vertical">
+                  <p class="board-group" aria-hidden="true">Systems</p>
+                  <button class="board-tab" type="button" role="tab" id="tab-logplat" aria-controls="quest-logplat" aria-selected="true" data-kind="main" data-line="Seventeen ways to kill it. Zero lost."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M0 0h8v1h-8zM0 2h5v1h-5zM0 4h8v1h-8zM0 6h6v1h-6z"/></svg><b>Log pipeline</b><span>Go · Kafka</span><em>Main</em></button>
+                  <button class="board-tab" type="button" role="tab" id="tab-hnsw" aria-controls="quest-hnsw" aria-selected="false" tabindex="-1" data-kind="side" data-line="45 microseconds. Don’t blink."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M1 0h4v1h-4zM0 1h1v1h-1zM5 1h1v1h-1zM0 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM5 3h1v1h-1zM1 4h4v1h-4zM4 5h2v1h-2zM5 6h2v1h-2zM6 7h2v1h-2z"/></svg><b>Vector search</b><span>C++ · HNSW</span><em>Side</em></button>
+                  <p class="board-group" aria-hidden="true">AI &amp; agents</p>
+                  <button class="board-tab" type="button" role="tab" id="tab-talentlens" aria-controls="quest-talentlens" aria-selected="false" tabindex="-1" data-kind="side" data-line="Two of five became four of five."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M1 0h5v1h-5zM1 1h1v1h-1zM5 1h2v1h-2zM1 2h1v1h-1zM6 2h1v1h-1zM1 3h1v1h-1zM3 3h2v1h-2zM6 3h1v1h-1zM1 4h1v1h-1zM6 4h1v1h-1zM1 5h1v1h-1zM3 5h2v1h-2zM6 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM1 7h6v1h-6z"/></svg><b>Resume search</b><span>FAISS · reranking</span><em>Side</em></button>
+                  <button class="board-tab" type="button" role="tab" id="tab-nebula" aria-controls="quest-nebula" aria-selected="false" tabindex="-1" data-kind="hackathon" data-line="Four tiers. I’m stuck on reading."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M3 0h1v1h-1zM3 1h1v1h-1zM2 2h3v1h-3zM0 3h7v1h-7zM2 4h3v1h-3zM3 5h1v1h-1zM6 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM6 7h1v1h-1z"/></svg><b>Nebula</b><span>Study knowledge graph</span><em>Hackathon</em></button>
+                  <button class="board-tab" type="button" role="tab" id="tab-stratos" aria-controls="quest-stratos" aria-selected="false" tabindex="-1" data-kind="hackathon" data-line="Five loops, then it answers."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M0 1h8v1h-8zM0 2h2v1h-2zM6 2h2v1h-2zM0 3h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM3 4h2v1h-2zM7 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM0 6h8v1h-8z"/></svg><b>STRATOS</b><span>Sponsor outreach agent</span><em>Hackathon</em></button>
+                  <p class="board-group" aria-hidden="true">Web</p>
+                  <button class="board-tab" type="button" role="tab" id="tab-droids" aria-controls="quest-droids" aria-selected="false" tabindex="-1" data-kind="club" data-line="Robots need websites too."><svg class="board-icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path d="M3 0h2v1h-2zM3 1h2v1h-2zM1 2h6v1h-6zM1 3h1v1h-1zM3 3h2v1h-2zM6 3h1v1h-1zM1 4h6v1h-6zM1 5h1v1h-1zM6 5h1v1h-1zM1 6h6v1h-6zM2 7h1v1h-1zM5 7h1v1h-1z"/></svg><b>Triton Droids</b><span>Robotics club site</span><em>Club</em></button>
                 </div>
               </div>
+              <div class="board-main">
+                <div class="board-panel" role="tabpanel" id="quest-logplat" aria-labelledby="tab-logplat" tabindex="0">
+                  <h3 class="project-title" id="logplat-title"><a href="https://github.com/Longhodac/log-plat" target="_blank" rel="noopener noreferrer">Distributed Log Ingestion Pipeline<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Main quest / Distributed systems</p>
+                  <ul class="bullets">
+                    <li>Built a Go/Kafka pipeline with durable spooling and idempotent writes, with zero loss in 17 tests on 1.02M logs</li>
+                    <li>Processed 70K logs/sec in local tests, cutting repeat-query latency 23× via Redis caching and OpenSearch indexing</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>0</b><span>logs lost</span></li><li><b>17</b><span>tests</span></li><li><b>1.02M</b><span>logs tested</span></li><li><b>70K</b><span>logs/sec, local tests</span></li><li><b>23×</b><span>lower repeat-query latency</span></li></ul>
+                  <figure class="viz" data-viz="race" hidden><canvas aria-hidden="true"></canvas><figcaption>The same repeat query, before and after caching. 23× is the measured ratio, and the speed shown is illustrative.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>Go</li><li>gRPC</li><li>Kafka</li><li>Redis</li><li>OpenSearch</li><li>Chaos Testing</li></ul>
 
-              <details class="details">
-                <summary>How it was tested</summary>
-                <div class="details-body">
-                  <p>Each chaos scenario writes 60,000 lines at 3,000 lines/s, injects a fault four seconds in, heals it, and then runs the checker. All 17 passed with zero missing lines in three full runs, using the whole stack in Docker on one laptop.</p>
-                  <dl class="scenarios">
-                    <dt>Process kills</dt><dd>SIGKILL the collector, Kafka, the indexer, the agent, or OpenSearch.</dd>
-                    <dt>Network faults</dt><dd>Toxiproxy cuts the links to the collector, Kafka, and OpenSearch, adds 800 ms of latency, resets connections, throttles Kafka to 50 KB/s, and blackholes OpenSearch.</dd>
-                    <dt>Forced duplicates</dt><dd>Drop the collector’s acks, or kill the indexer after a write but before its offset commit. These fail unless OpenSearch absorbs the redundant writes.</dd>
-                    <dt>Crash loops</dt><dd>Kill the collector and the indexer three times each, and kill every service in sequence.</dd>
-                  </dl>
-                  <p>The throughput limit is the indexer’s poll, write, commit cycle, not the agents or the collector.</p>
-                  <p><a class="link" href="https://github.com/Longhodac/log-plat/blob/main/results/README.md" target="_blank" rel="noopener noreferrer">Results and raw output<span class="sr-only"> (opens in a new tab)</span></a></p>
+                  <div class="pipeline" data-tabs role="group" aria-labelledby="pipeline-caption">
+                    <p id="pipeline-caption" class="pipeline-caption"><b>Pipeline</b> <span>Select a stage to see what happens when it fails</span></p>
+                    <div class="stages" role="tablist" aria-label="Pipeline stages" aria-orientation="horizontal">
+                      <canvas class="stages-canvas" aria-hidden="true"></canvas>
+                      <button class="stage" type="button" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="true">agent</button>
+                      <span class="edge" aria-hidden="true"><span>gRPC</span></span>
+                      <button class="stage" type="button" role="tab" id="tab-collector" aria-controls="panel-collector" aria-selected="false" tabindex="-1">collector</button>
+                      <span class="edge" aria-hidden="true"><span>acks=all</span></span>
+                      <button class="stage" type="button" role="tab" id="tab-kafka" aria-controls="panel-kafka" aria-selected="false" tabindex="-1">kafka</button>
+                      <span class="edge" aria-hidden="true"><span>poll</span></span>
+                      <button class="stage" type="button" role="tab" id="tab-indexer" aria-controls="panel-indexer" aria-selected="false" tabindex="-1">indexer</button>
+                      <span class="edge" aria-hidden="true"><span>_bulk</span></span>
+                      <button class="stage" type="button" role="tab" id="tab-opensearch" aria-controls="panel-opensearch" aria-selected="false" tabindex="-1">opensearch</button>
+                    </div>
+                    <div class="sim" hidden>
+                      <div class="sim-controls">
+                        <button class="btn crash" type="button">Crash <span class="crash-name">agent</span></button>
+                        <p class="sim-readout" aria-hidden="true"><span>read <b data-count="read">0</b></span><span>indexed <b data-count="indexed">0</b></span><span>in flight <b data-count="waiting">0</b></span><span>lost <b data-count="lost">0</b></span></p>
+                        <p class="sim-note">An illustration of the delivery rules, not measured data.</p>
+                        <p class="sr-only sim-status" role="status"></p>
+                      </div>
+                      <div class="crt" aria-hidden="true"><img src="/assets/art/roman.jpg" alt="" width="840" height="494" loading="lazy" decoding="async"><span class="crt-label"></span></div>
+                    </div>
+                    <div class="stage-panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent" tabindex="0">
+                      <h4 class="panel-title">agent</h4>
+                      <dl>
+                        <dt>Does</dt><dd>Tails log files and gives each line an ID from its file position. Each batch is written to a disk spool with fsync before it’s sent.</dd>
+                        <dt>If it fails</dt><dd>Spooled batches survive the crash. A batch is deleted only after the collector acks it, so anything unacknowledged is resent on restart.</dd>
+                      </dl>
+                    </div>
+                    <div class="stage-panel" role="tabpanel" id="panel-collector" aria-labelledby="tab-collector" tabindex="0">
+                      <h4 class="panel-title">collector</h4>
+                      <dl>
+                        <dt>Does</dt><dd>gRPC server. Checks the API key, rejects invalid entries, and publishes to Kafka partitioned by service, waiting for all replicas to confirm.</dd>
+                        <dt>If it fails</dt><dd>It acks the agent only after Kafka confirms the write. No ack means the agent keeps the batch and resends it with exponential backoff.</dd>
+                      </dl>
+                    </div>
+                    <div class="stage-panel" role="tabpanel" id="panel-kafka" aria-labelledby="tab-kafka" tabindex="0">
+                      <h4 class="panel-title">kafka</h4>
+                      <dl>
+                        <dt>Does</dt><dd>Buffers records between ingestion and indexing, so a slow indexer doesn’t push back on the agents.</dd>
+                        <dt>If it fails</dt><dd>The collector can’t get a confirmed write, so it never acks. Batches stay in the agents’ spools until Kafka is back.</dd>
+                      </dl>
+                    </div>
+                    <div class="stage-panel" role="tabpanel" id="panel-indexer" aria-labelledby="tab-indexer" tabindex="0">
+                      <h4 class="panel-title">indexer</h4>
+                      <dl>
+                        <dt>Does</dt><dd>Kafka consumer group. Bulk-writes into daily indices and commits its offsets only after OpenSearch accepts the writes. Records it can’t parse go to a dead-letter topic.</dd>
+                        <dt>If it fails</dt><dd>A crash between the write and the commit means Kafka redelivers those records. They carry the same IDs, so they overwrite the earlier copies.</dd>
+                      </dl>
+                    </div>
+                    <div class="stage-panel" role="tabpanel" id="panel-opensearch" aria-labelledby="tab-opensearch" tabindex="0">
+                      <h4 class="panel-title">opensearch</h4>
+                      <dl>
+                        <dt>Does</dt><dd>Stores each line as a document keyed by its log ID. The query API on top supports filters by time, service, level, and text, with cursor pagination.</dd>
+                        <dt>If it fails</dt><dd>The indexer retries failed items and holds off on committing, so the records wait in Kafka until OpenSearch recovers.</dd>
+                      </dl>
+                    </div>
+                  </div>
+
+                  <details class="details">
+                    <summary>How it was tested</summary>
+                    <div class="details-body">
+                      <p>Each chaos scenario writes 60,000 lines at 3,000 lines/s, injects a fault four seconds in, heals it, and then runs the checker. All 17 passed with zero missing lines in three full runs, using the whole stack in Docker on one laptop.</p>
+                      <dl class="scenarios">
+                        <dt>Process kills</dt><dd>SIGKILL the collector, Kafka, the indexer, the agent, or OpenSearch.</dd>
+                        <dt>Network faults</dt><dd>Toxiproxy cuts the links to the collector, Kafka, and OpenSearch, adds 800 ms of latency, resets connections, throttles Kafka to 50 KB/s, and blackholes OpenSearch.</dd>
+                        <dt>Forced duplicates</dt><dd>Drop the collector’s acks, or kill the indexer after a write but before its offset commit. These fail unless OpenSearch absorbs the redundant writes.</dd>
+                        <dt>Crash loops</dt><dd>Kill the collector and the indexer three times each, and kill every service in sequence.</dd>
+                      </dl>
+                      <p>The throughput limit is the indexer’s poll, write, commit cycle, not the agents or the collector.</p>
+                      <p><a class="link" href="https://github.com/Longhodac/log-plat/blob/main/results/README.md" target="_blank" rel="noopener noreferrer">Results and raw output<span class="sr-only"> (opens in a new tab)</span></a></p>
+                    </div>
+                  </details>
                 </div>
-              </details>
-            </div>
-          </article>
-        </div>
 
-        <div class="side-quests win-wrap" data-perch-section data-line="Side quests count too.">
-          <div class="perch" data-perch data-pose="sit" data-x="0.8" data-y="0"></div>
-          <article class="win" aria-labelledby="hnsw-title">
-            <p class="win-bar"><span>Side quest</span><i aria-hidden="true"></i></p>
-            <div class="win-body">
-              <h3 class="project-title" id="hnsw-title"><a href="https://github.com/Longhodac/hnsw-cpp" target="_blank" rel="noopener noreferrer">Low-Latency Vector Search Engine<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
-              <ul class="bullets">
-                <li>Built a C++ HNSW search engine for 1M vectors, reaching 45 µs/query at 95% recall with SIMD and prefetching</li>
-                <li>Scaled parallel search 4.9× on 10 threads with atomic reads and striped locks; mmap indexes loaded in ∼2 ms</li>
-              </ul>
-              <ul class="stats stats-row" aria-label="Key numbers"><li><b>45 µs</b><span>per query, 95% recall</span></li><li><b>4.9×</b><span>on 10 threads</span></li><li><b>∼2 ms</b><span>mmap index load</span></li></ul>
-              <figure class="viz" data-viz="hnsw" hidden><canvas aria-hidden="true"></canvas><figcaption>A real greedy search through layers, on a small sample graph rather than the 1M-vector index.</figcaption></figure>
-              <ul class="tags" aria-label="Technologies"><li>C++</li><li>HNSW</li><li>SIMD</li><li>Concurrency</li><li>mmap</li></ul>
+                <div class="board-panel" role="tabpanel" id="quest-hnsw" aria-labelledby="tab-hnsw" tabindex="0">
+                  <h3 class="project-title" id="hnsw-title"><a href="https://github.com/Longhodac/hnsw-cpp" target="_blank" rel="noopener noreferrer">Low-Latency Vector Search Engine<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Side quest / Systems performance</p>
+                  <ul class="bullets">
+                    <li>Built a C++ HNSW search engine for 1M vectors, reaching 45 µs/query at 95% recall with SIMD and prefetching</li>
+                    <li>Scaled parallel search 4.9× on 10 threads with atomic reads and striped locks; mmap indexes loaded in ∼2 ms</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>45 µs</b><span>per query, 95% recall</span></li><li><b>4.9×</b><span>on 10 threads</span></li><li><b>∼2 ms</b><span>mmap index load</span></li></ul>
+                  <figure class="viz" data-viz="hnsw" hidden><canvas aria-hidden="true"></canvas><figcaption>A real greedy search through layers, on a small sample graph rather than the 1M-vector index.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>C++</li><li>HNSW</li><li>SIMD</li><li>Concurrency</li><li>mmap</li></ul>
+                </div>
+
+                <div class="board-panel" role="tabpanel" id="quest-talentlens" aria-labelledby="tab-talentlens" tabindex="0">
+                  <h3 class="project-title" id="talentlens-title"><a href="https://github.com/anirudh9280/TalentLens_Public" target="_blank" rel="noopener noreferrer">AI Resume Search with Reranking<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Side quest / Search and ranking / Team of 5</p>
+                  <ul class="bullets">
+                    <li>Led a 5-person team on resume search for 500+ members, using reranking to lift top-5 matches from 40% to 80%</li>
+                    <li>Built OCR-backed resume search using Tesseract to parse scanned PDFs and FAISS for semantic candidate retrieval</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>80%</b><span>top-5 matches, up from 40%</span><i class="bar" style="--v:0.8;--from:0.4"></i></li><li><b>500+</b><span>members</span></li><li><b>5</b><span>person team</span></li></ul>
+                  <figure class="viz" data-viz="rerank" hidden><canvas aria-hidden="true"></canvas><figcaption>Solid rows are matches. An example ranking showing the measured shift from 2 of 5 to 4 of 5.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>Python</li><li>PyTorch</li><li>FAISS</li><li>ChromaDB</li></ul>
+                </div>
+
+                <div class="board-panel" role="tabpanel" id="quest-nebula" aria-labelledby="tab-nebula" tabindex="0">
+                  <h3 class="project-title" id="nebula-title"><a href="https://github.com/andrewy1n/IrvineHacks2026" target="_blank" rel="noopener noreferrer">Nebula Knowledge Graph Study Tracker<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Hackathon / Irvine Hacks 2026</p>
+                  <ul class="bullets">
+                    <li>Built a study tool with a team at Irvine Hacks 2026 that turns a course PDF into a live knowledge graph of concepts</li>
+                    <li>Built the web app flow from uploaded PDF to JSON to a D3 force graph, with mastery features that track each concept</li>
+                    <li>Concepts climb four tiers, from reading to recall, written answers, and explaining aloud, fed by a Chrome extension that tracks reading on OpenStax</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>4</b><span>mastery tiers</span></li><li><b>3</b><span>web app, API, extension</span></li><li><b>2</b><span>LLM APIs, extract and grade</span></li></ul>
+                  <figure class="viz" data-viz="nebula" hidden><canvas aria-hidden="true"></canvas><figcaption>One concept climbing the four mastery tiers. An illustration on a made-up graph, not a real course.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>React</li><li>TypeScript</li><li>D3</li><li>FastAPI</li><li>SQLite</li><li>Chrome Extension</li></ul>
+                </div>
+
+                <div class="board-panel" role="tabpanel" id="quest-stratos" aria-labelledby="tab-stratos" tabindex="0">
+                  <h3 class="project-title" id="stratos-title"><a href="https://github.com/Longhodac/STRATOS-SandHacks" target="_blank" rel="noopener noreferrer">STRATOS Sponsor Outreach Agent<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Hackathon / SandHacks 2026</p>
+                  <ul class="bullets">
+                    <li>Built an outreach agent for student clubs at SandHacks that finds sponsors by industry, researches contacts, and drafts emails</li>
+                    <li>Integrated a Groq function-calling loop into the chat sidebar, chaining up to 5 rounds of tool calls across 6 tools</li>
+                    <li>Added the Python agents that research contacts, a Perplexity email lookup and a Selenium site scraper, served by FastAPI</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>6</b><span>agent tools</span></li><li><b>5</b><span>loop rounds at most</span></li><li><b>5</b><span>template bricks per draft</span></li></ul>
+                  <figure class="viz" data-viz="agentloop" hidden><canvas aria-hidden="true"></canvas><figcaption>One request going round the agent loop. An illustration, not a recorded run.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>React</li><li>TypeScript</li><li>Groq</li><li>FastAPI</li><li>Perplexity</li><li>Selenium</li></ul>
+                </div>
+
+                <div class="board-panel" role="tabpanel" id="quest-droids" aria-labelledby="tab-droids" tabindex="0">
+                  <h3 class="project-title" id="droids-title"><a href="https://github.com/triton-droids/website" target="_blank" rel="noopener noreferrer">Triton Droids Website<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
+                  <p class="meta">Club / Lead Full-Stack Developer / <a class="link" href="https://tritondroids.org/" target="_blank" rel="noopener noreferrer">tritondroids.org<span class="sr-only"> (opens in a new tab)</span></a></p>
+                  <ul class="bullets">
+                    <li>Lead full-stack developer for the website of UC San Diego’s humanoid robotics club, live at tritondroids.org</li>
+                    <li>Shipped 16 pull requests, including the homepage sections, the Join page, and the Humanoid Robot project page</li>
+                    <li>Added 3D robot model viewers, an auto-scrolling gallery, per-page SEO with a sitemap, and page analytics</li>
+                  </ul>
+                  <ul class="stats stats-row" aria-label="Key numbers"><li><b>16</b><span>pull requests merged</span></li><li><b>10</b><span>routes</span></li><li><b>3</b><span>device profiles in the test suite</span></li></ul>
+                  <figure class="viz" data-viz="screens" hidden><canvas aria-hidden="true"></canvas><figcaption>One page at the three screen sizes the project’s Playwright suite covers. An illustration.</figcaption></figure>
+                  <ul class="tags" aria-label="Technologies"><li>React</li><li>TypeScript</li><li>Tailwind</li><li>Vite</li><li>Playwright</li></ul>
+                </div>
+
+                <div class="board-pager" hidden><button class="board-step" type="button" data-step="-1"><span class="sr-only">Previous project: </span><b></b></button><button class="board-step" type="button" data-step="1"><span class="sr-only">Next project: </span><b></b></button></div>
+              </div>
             </div>
-          </article>
-          <article class="win" aria-labelledby="talentlens-title">
-            <p class="win-bar"><span>Side quest</span><i aria-hidden="true"></i></p>
-            <div class="win-body">
-              <h3 class="project-title" id="talentlens-title"><a href="https://github.com/anirudh9280/TalentLens_Public" target="_blank" rel="noopener noreferrer">AI Resume Search with Reranking<span class="sr-only"> on GitHub (opens in a new tab)</span></a></h3>
-              <ul class="bullets">
-                <li>Led a 5-person team on resume search for 500+ members, using reranking to lift top-5 matches from 40% to 80%</li>
-                <li>Built OCR-backed resume search using Tesseract to parse scanned PDFs and FAISS for semantic candidate retrieval</li>
-              </ul>
-              <ul class="stats stats-row" aria-label="Key numbers"><li><b>80%</b><span>top-5 matches, up from 40%</span><i class="bar" style="--v:0.8;--from:0.4"></i></li><li><b>500+</b><span>members</span></li><li><b>5</b><span>person team</span></li></ul>
-              <figure class="viz" data-viz="rerank" hidden><canvas aria-hidden="true"></canvas><figcaption>Solid rows are matches. An example ranking showing the measured shift from 2 of 5 to 4 of 5.</figcaption></figure>
-              <ul class="tags" aria-label="Technologies"><li>Python</li><li>PyTorch</li><li>FAISS</li><li>ChromaDB</li></ul>
-            </div>
-          </article>
+          </div>
         </div>
       </div>
     </section>
