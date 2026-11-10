@@ -12,6 +12,9 @@
   button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
   a { color: inherit; }
   [hidden] { display: none !important; }
+  /* Paper has no tabs, so every tab panel prints. The exception lives here because an !important in this layer
+     outranks one in any later layer. */
+  @media print { [role='tabpanel'][hidden] { display: block !important; } }
 }
 
 @layer tokens {
@@ -331,9 +334,88 @@
   .project-title a { color: var(--yellow); text-decoration: none; }
   .project-title a::after { content: '\00a0↗'; font: 400 16px/1 var(--mono); color: var(--cyan); }
   .project-title a:hover { color: var(--cyan); }
-  .side-quests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; margin-top: 216px; }
-  .side-quests .project-title { font-size: 19px; line-height: 26px; }
-  @media (max-width: 800px) { .side-quests { grid-template-columns: minmax(0, 1fr); margin-top: 160px; gap: 32px; } }
+
+  /* Quest board: an index of every project beside the one that's open. Without JavaScript the index stays hidden
+     and the projects stack in order. */
+  .board-side { display: none; background: var(--night); }
+  .board-panel { min-width: 0; padding: 24px; }
+  .board-panel + .board-panel { box-shadow: 0 calc(-1 * var(--px)) 0 var(--line); }
+  .board .project-title { margin-bottom: 0; }
+  .board .stats-row { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+  .board.is-enhanced .board-side { display: block; }
+  .board.is-enhanced .board-panel { box-shadow: none; }
+  .board.is-enhanced .board-body { display: grid; grid-template-columns: 232px minmax(0, 1fr); }
+  .board-main { min-width: 0; }
+  /* The index leaves the pipeline less room, so its stages give a little back to the labelled wires between them. */
+  @media (min-width: 1001px) and (max-width: 1100px) { .board .stage { padding-inline: 9px; } }
+  .board-rail { position: sticky; top: calc(var(--nav-height) + 12px); display: grid; gap: 2px; padding: 14px 8px 16px; }
+  .board-group {
+    display: flex; align-items: center; gap: 8px; padding: 12px 2px 4px 10px;
+    font: 500 11px/16px var(--mono); letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
+  }
+  .board-group:first-child { padding-top: 0; }
+  .board-group::after { content: ''; flex: 1; height: 2px; background: var(--line); }
+  .board-tab {
+    --tone: var(--cyan);
+    position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; gap: 1px 10px;
+    padding: 8px 10px 9px 26px; text-align: left; color: var(--muted);
+  }
+  .board-tab[data-kind='main'] { --tone: var(--yellow); }
+  .board-tab[data-kind='hackathon'] { --tone: var(--orange); }
+  .board-tab[data-kind='club'] { --tone: var(--green); }
+  .board-icon { grid-row: 1 / span 2; width: 16px; height: 16px; fill: var(--tone); }
+  .board-tab b { font: 500 14px/20px var(--sans); color: var(--text); }
+  .board-tab span { grid-column: 2 / -1; font: 400 11px/16px var(--mono); }
+  .board-tab em {
+    grid-area: 1 / 3; padding: 0 5px;
+    font: 500 10px/16px var(--mono); letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent);
+  }
+  .board-tab:hover { background: var(--panel); }
+  .board-tab[aria-selected='true'] { background: var(--panel-2); }
+  .board-tab[aria-selected='true'] b { color: var(--yellow); }
+  /* A stepped pixel arrow: the menu cursor on the open project, and the arrows on the pager. */
+  .board-tab[aria-selected='true']::before, .board-step::before, .board-step::after {
+    content: ''; flex: none; width: 6px; height: 10px;
+    background:
+      linear-gradient(currentColor, currentColor) 0 0 / 2px 10px no-repeat,
+      linear-gradient(currentColor, currentColor) 2px 2px / 2px 6px no-repeat,
+      linear-gradient(currentColor, currentColor) 4px 4px / 2px 2px no-repeat;
+  }
+  .board-tab[aria-selected='true']::before { position: absolute; left: 10px; top: 13px; color: var(--yellow); }
+  .board-step[data-step='-1']::before { scale: -1 1; }
+  .board-step[data-step='-1']::after, .board-step[data-step='1']::before { content: none; }
+  /* Beside the board on wide screens, Capri keeps her spot while the open project changes the board's height. */
+  @media (min-width: 1400px) { #projects .perch { bottom: auto; height: 1040px; } }
+  .board-pips { display: flex; align-items: center; gap: 4px; margin-right: auto; letter-spacing: 0; color: var(--muted); }
+  .board-pips b { width: 6px; height: 6px; background: var(--line); }
+  .board-pips b.is-seen { background: var(--yellow); }
+  .board-pips span { margin-left: 4px; }
+  .board-pager {
+    display: flex; justify-content: space-between; gap: 16px; margin: 0 24px; padding: 12px 0 16px;
+    font: 500 12px/18px var(--mono); box-shadow: inset 0 2px 0 var(--line);
+  }
+  .board-step { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); }
+  .board-step b { font-weight: 500; }
+  .board-step:hover { color: var(--yellow); }
+  @media (max-width: 1000px) {
+    .board.is-enhanced .board-body { display: block; }
+    .board-rail { position: static; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 8px; }
+    .board-group { display: none; }
+    .board-tab { grid-template-columns: 16px minmax(0, 1fr); align-content: start; padding: 8px 10px 9px 12px; }
+    .board-tab span { display: none; }
+    .board-tab em { grid-area: 2 / 2; justify-self: start; }
+    .board-tab[aria-selected='true'] { box-shadow: inset 3px 0 0 var(--yellow); }
+    .board-tab[aria-selected='true']::before { content: none; }
+  }
+  @media (max-width: 600px) {
+    .board-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .board-tab { gap: 0 8px; padding: 7px 8px 8px 10px; }
+    .board-tab em { display: none; }
+    .board-icon { grid-row: auto; }
+    .board-panel { padding: 16px; }
+    .board-pager { margin: 0 16px; }
+  }
 
   .pipeline { position: relative; margin-top: 24px; padding: 16px; background: var(--night); box-shadow: inset 0 0 0 2px var(--line); }
   .pipeline-caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; font: 400 13px/20px var(--mono); margin-bottom: 28px; }
@@ -534,16 +616,22 @@
   @media (forced-colors: active) {
     .scene, .scanlines, .perch, .hero-scrim, .frame::before, .frame::after, .retro::before, .retro::after { display: none; }
     .win, .btn, .stage, .viz { border: 2px solid CanvasText; }
+    .board-tab[aria-selected='true'] { outline: 2px solid Highlight; outline-offset: -2px; }
   }
   @media print {
     html { background: #fff; }
     body { color: #000; }
-    .nav, .scene, .scanlines, .perch, .bubble, .hang, .contact-art, .floor, .hero-scrim, .sim, .quest-tabs, .timeline, .stages, .viz { display: none !important; }
+    .nav, .scene, .scanlines, .perch, .bubble, .hang, .contact-art, .floor, .hero-scrim, .sim, .quest-tabs, .timeline, .stages, .viz, .board-side, .board-pager { display: none !important; }
     .win, .btn { box-shadow: none; background: none; color: #000; }
     .win-bar { display: none; }
     .sec-title, .quest-panel h3, .project-title a, .lede em, .meta, .contact-title { color: #000; text-shadow: none; background: none; box-shadow: none; }
     .section, .contact, .hero { padding: 16px 0; min-height: 0; }
-    .quest-panel[hidden], .stage-panel[hidden] { display: block !important; }
+    .board.is-enhanced .board-body { display: block; }
+    .board-panel { padding-inline: 0; }
+    /* Every stage prints, so each one needs its name back and ink that shows on white. */
+    .is-enhanced .panel-title { display: block; }
+    .pipeline, .details summary { background: none; box-shadow: none; }
+    .stats b, .stats span, .tags li, .pipeline-caption b, .pipeline-caption span, .panel-title, .stage-panel dt, .scenarios dt, .details summary { color: #000; }
     .quest-panel:not([hidden]) { display: block; }
   }
 }
@@ -562,7 +650,7 @@
   @keyframes sweep {
     to { transform: translateX(1400px); }
   }
-  html[data-fx='on'] .quest-panel h3, html[data-fx='on'] .project-title a:hover { animation: glitch-in 420ms steps(1) both; }
+  html[data-fx='on'] .quest-panel h3, html[data-fx='on'] .board-panel .project-title, html[data-fx='on'] .project-title a:hover { animation: glitch-in 420ms steps(1) both; }
   @keyframes glitch-in {
     0% { text-shadow: -4px 0 var(--crimson), 4px 0 var(--cyan); translate: 3px 0; }
     25% { text-shadow: 3px 0 var(--crimson), -3px 0 var(--cyan); translate: -2px 0; }
@@ -582,8 +670,30 @@
   @keyframes pop {
     from { transform: scale(0.8); }
   }
-  html[data-fx='on'] .quest-panel, html[data-fx='on'] .stage-panel {
+  html[data-fx='on'] .quest-panel, html[data-fx='on'] .stage-panel, html[data-fx='on'] .board-panel {
     animation: boot 180ms steps(4) both;
+  }
+  html[data-fx='on'] .board-tab[aria-selected='true']::before { animation: nudge 800ms steps(1) infinite; }
+  @keyframes nudge {
+    50% { translate: 2px 0; }
+  }
+  /* The logo flickers on like a neon sign. */
+  html[data-fx='on'] .hero-title img { animation: neon-on 1.3s steps(1) both; }
+  @keyframes neon-on {
+    0%, 12%, 22% { opacity: 0.12; }
+    8%, 18%, 34%, 100% { opacity: 1; }
+    28% { opacity: 0.5; }
+  }
+  /* Windows power on and section titles glitch in the first time they scroll into view. script.js marks the ones
+     still waiting. They stay focusable, so tabbing into one scrolls it in and starts it. */
+  @media screen {
+    html[data-fx='on'] .is-waiting:not(:focus-within) { opacity: 0; }
+  }
+  html[data-fx='on'] .win.has-arrived { animation: power-on 320ms steps(6) backwards; }
+  html[data-fx='on'] .sec-title.has-arrived { animation: glitch-in 420ms steps(1) backwards; }
+  @keyframes power-on {
+    from { clip-path: inset(-20px -20px 100% -20px); }
+    to { clip-path: inset(-20px); }
   }
   @keyframes boot {
     from { clip-path: inset(0 0 100% 0); }

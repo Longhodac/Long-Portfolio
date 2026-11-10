@@ -20,10 +20,10 @@ const CLEAR = 0; const BODY = 1; const SIDE = 2; const DIM = 3; const LIT_A = 4;
 
 const GLYPHS = {
   A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111',
-  H: '101101111101101', L: '100100100100111', N: '110101101101101', O: '010101101101010', P: '110101110100100',
-  R: '110101110101101', T: '111010010010010', 2: '110001010100111', 4: '101101111001001'
+  G: '011100101101011', H: '101101111101101', L: '100100100100111', N: '110101101101101', O: '010101101101010',
+  P: '110101110100100', R: '110101110101101', T: '111010010010010', 2: '110001010100111', 4: '101101111001001'
 };
-const SIGNS = ['BAR', 'HOTEL', '24H', 'NOODLE', 'NEON', 'ARCADE', 'OPEN', 'TOP'];
+const SIGNS = ['BAR', 'LONG', '24H', 'NOODLE', 'NEON', 'ARCADE', 'OPEN', 'TOP', 'HOTEL'];
 
 const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const pack = ([r, g, b]) => ((255 << 24) | (Math.round(b) << 16) | (Math.round(g) << 8) | Math.round(r)) >>> 0;
@@ -160,6 +160,7 @@ export function startScene(canvas) {
   let layers = [];
   let cars = [];
   let drops = [];
+  let meteor = null;
   let bucket = -1;
   let palette = paletteAt(0);
   let raf = 0;
@@ -267,6 +268,13 @@ export function startScene(canvas) {
   function draw(scroll) {
     ctx.drawImage(sky, 0, 0);
     ctx.drawImage(sun, Math.round(W * 0.72 - sunR), Math.round(H * 0.34 - sunR + (scroll * 0.14) / S));
+    if (meteor) {
+      const reach = Math.max(Math.abs(meteor.vx), Math.abs(meteor.vy));
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = css(mix(palette.star, palette.sky[1], i / 8));
+        ctx.fillRect(Math.round(meteor.x - (meteor.vx / reach) * i), Math.round(meteor.y - (meteor.vy / reach) * i), 1, 1);
+      }
+    }
     for (const layer of layers) {
       ctx.drawImage(layer.canvas, 0, Math.round(layer.top - (scroll * layer.rate) / S));
       if (layer.name === 'mid') {
@@ -301,6 +309,15 @@ export function startScene(canvas) {
       drop.x -= 1;
       if (drop.y >= H) drop.y -= H;
       if (drop.x < 0) drop.x += W;
+    }
+    // A shooting star every several seconds, once the sky is dark enough to show one.
+    if (meteor) {
+      meteor.x += meteor.vx;
+      meteor.y += meteor.vy;
+      meteor.life -= 1;
+      if (meteor.life <= 0) meteor = null;
+    } else if (bucket / BUCKETS > 0.25 && Math.random() < 0.012) {
+      meteor = { x: W * (0.2 + Math.random() * 0.75), y: H * Math.random() * 0.3, vx: -(2 + Math.random() * 2), vy: 1 + Math.random(), life: 10 + Math.floor(Math.random() * 8) };
     }
     for (const layer of layers) {
       const g = layer.canvas.getContext('2d');
@@ -355,6 +372,7 @@ export function startScene(canvas) {
     } else if (!run && raf) {
       cancelAnimationFrame(raf);
       raf = 0;
+      meteor = null;
     }
     if (!run && !document.hidden) render(0);
   }

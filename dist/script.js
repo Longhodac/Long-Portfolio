@@ -5,6 +5,7 @@ const root = document.documentElement;
 let capri = null;
 let scene = null;
 let viz = null;
+const say = line => { if (capri) capri.say(line); };
 
 function storedEffects() {
   try { return localStorage.getItem('effects'); } catch { return null; }
@@ -25,8 +26,8 @@ const tabKeys = {
   End: (i, count) => count - 1
 };
 
-function tabGroup(group, onShow) {
-  const tabs = [...group.querySelectorAll('[role="tab"]')];
+// A group that holds another tab group inside one of its panels passes its own tabs.
+function tabGroup(group, onShow, tabs = [...group.querySelectorAll('[role="tab"]')]) {
   const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
   const show = index => {
     tabs.forEach((tab, i) => {
@@ -57,6 +58,39 @@ const timelineRows = [...document.querySelectorAll('.timeline i')];
 tabGroup(document.querySelector('.quest'), index => {
   timelineRows.forEach((row, i) => row.classList.toggle('is-current', i === index));
 });
+
+// Quest board: the pips in the title bar fill in as projects are opened, and the pager steps through them in order.
+const board = document.querySelector('.board');
+const boardPips = board.querySelector('.board-pips');
+const boardPager = board.querySelector('.board-pager');
+const boardSteps = [...boardPager.querySelectorAll('.board-step')];
+const nav = document.querySelector('.nav');
+const openedQuests = new Set();
+let openQuest = 0;
+
+const questTabs = tabGroup(board, (index, all) => {
+  // The first call is the board opening its first project, not the visitor choosing one.
+  const chosen = openedQuests.size > 0;
+  const firstVisit = !openedQuests.has(index);
+  openQuest = index;
+  openedQuests.add(index);
+  boardPips.replaceChildren(
+    ...all.map((_, i) => Object.assign(document.createElement('b'), { className: openedQuests.has(i) ? 'is-seen' : '' })),
+    Object.assign(document.createElement('span'), { textContent: `${openedQuests.size}/${all.length}` })
+  );
+  boardSteps.forEach(step => {
+    const target = all[(index + Number(step.dataset.step) + all.length) % all.length];
+    step.querySelector('b').textContent = target.querySelector('b').textContent;
+  });
+  if (!chosen) return;
+  if (board.getBoundingClientRect().top < nav.offsetHeight) board.scrollIntoView();
+  say(firstVisit && openedQuests.size === all.length ? 'Full clear. Completionist.' : all[index].dataset.line);
+}, [...board.querySelectorAll('.board-tab')]);
+
+boardSteps.forEach(step => step.addEventListener('click', () => {
+  questTabs[(openQuest + Number(step.dataset.step) + questTabs.length) % questTabs.length].click();
+}));
+boardPager.hidden = false;
 
 // A small simulation of the delivery rules: a sender keeps a batch until the next hop has it, so a crash
 // only makes lines wait. Lines in flight towards a crashed stage go back and are resent, which is where
@@ -230,8 +264,6 @@ if (navigator.clipboard && window.isSecureContext) {
   });
 }
 
-const say = line => { if (capri) capri.say(line); };
-
 // Effects ---------------------------------------------------------------------------------------
 const fxToggle = document.querySelector('.fx-toggle');
 const videos = [...document.querySelectorAll('[data-fx-video]')];
@@ -280,6 +312,18 @@ fxToggle.addEventListener('click', () => {
   applyEffects();
 });
 applyEffects();
+
+// Windows and section titles wait out of sight, then play their entrance once when they scroll into view.
+function arrive(el) {
+  if (el.classList.replace('is-waiting', 'has-arrived')) arrivals.unobserve(el);
+}
+const arrivals = new IntersectionObserver(entries => {
+  entries.forEach(entry => { if (entry.isIntersecting) arrive(entry.target); });
+}, { rootMargin: '0px 0px -12% 0px' });
+document.querySelectorAll('.win, .sec-title').forEach(el => {
+  el.classList.add('is-waiting');
+  arrivals.observe(el);
+});
 
 // Progress bar, for browsers without scroll-driven animations -------------------------------------
 if (!CSS.supports('animation-timeline: scroll()')) {
@@ -332,6 +376,8 @@ const sectionObserver = new IntersectionObserver(entries => {
     if (link.hash === `#${anchor}`) link.setAttribute('aria-current', 'location');
     else link.removeAttribute('aria-current');
   });
+  // Capri never lands on a window that hasn't appeared yet.
+  activeSection.querySelectorAll('.is-waiting').forEach(arrive);
   moveCapri(activeSection);
   say(activeSection.dataset.line);
 }, { rootMargin: '-25% 0px -40% 0px' });
