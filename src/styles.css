@@ -684,7 +684,7 @@
     8%, 18%, 34%, 100% { opacity: 1; }
     28% { opacity: 0.5; }
   }
-  /* Windows power on and section titles glitch in the first time they scroll into view. script.js marks the ones
+  /* Windows power on and section titles glitch in the first time they scroll into view. useArrival marks the ones
      still waiting. They stay focusable, so tabbing into one scrolls it in and starts it. */
   @media screen {
     html[data-fx='on'] .is-waiting:not(:focus-within) { opacity: 0; }

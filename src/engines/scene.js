@@ -385,19 +385,30 @@ export function startScene(canvas) {
     builtHeight = innerHeight;
     render(motion() ? scrollDepth() : 0);
   }
+  const listening = new AbortController();
+  const { signal } = listening;
   addEventListener('resize', () => {
     // A phone's address bar changes the height while scrolling. That shouldn't rebuild the city.
     if (root.clientWidth === builtWidth && innerHeight <= builtHeight) return;
     rebuild();
-  }, { passive: true });
-  document.addEventListener('visibilitychange', sync);
-  new ResizeObserver(() => {
+  }, { passive: true, signal });
+  document.addEventListener('visibilitychange', sync, { signal });
+  const resizer = new ResizeObserver(() => {
     const next = Math.max(1, root.scrollHeight - innerHeight);
     if (Math.abs(next - maxScroll) > innerHeight) rebuild();
     else maxScroll = next;
-  }).observe(document.body);
+  });
+  resizer.observe(document.body);
 
   rebuild();
   sync();
-  return { sync };
+  return {
+    sync,
+    stop() {
+      listening.abort();
+      resizer.disconnect();
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+  };
 }

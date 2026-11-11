@@ -3,9 +3,20 @@
   "private": true,
   "version": "1.0.0",
   "description": "Long HoDac's portfolio, with a pixel cyberpunk fan theme.",
+  "type": "module",
   "scripts": {
-    "dev": "python3 -m http.server 4173 --bind 127.0.0.1 --directory dist",
-    "check": "node --check dist/script.js && node --check dist/capri.js && node --check dist/scene.js && node --check dist/viz.js",
+    "dev": "vite",
+    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "check": "npm run build",
     "art": "python3 tools/build_art.py"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.4.1",
+    "vite": "6.3.5"
   }
 }

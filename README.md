@@ -1,24 +1,32 @@
 # Long HoDac portfolio
 
-A static site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and the show's GIFs playing in neon frames hung around the page. There is no build step and no runtime dependency, and everything it loads is self-hosted.
+A React site with a retro cyberpunk fan theme: a pixel-art city, Capri from Cyberpunk: Edgerunners 2 drawn as live vector art, and the show's GIFs playing in neon frames hung around the page. Vite builds it, and the build prerenders the page to static HTML, so all content is readable before any JavaScript runs. React is the only runtime dependency, and everything the page loads is self-hosted.
 
 ## Preview
 
-Run `npm run dev`, then open http://127.0.0.1:4173. The server requires Python 3. If the port is taken, an earlier server is probably still running. Stop it or run `python3 -m http.server 4174 --directory dist`.
+Run `npm install` once, then `npm run dev` and open http://127.0.0.1:4173. The dev server renders the page in the browser only, so to see the prerendered page, run `npm run build` and then `npm run preview`. If port 4173 is taken, an earlier server is probably still running. Stop it or run `npx vite --port 4174`.
 
 ## Edit
 
-- `dist/index.html` holds all page content. [Content sources](#content-sources) says where each bullet comes from.
-- `dist/styles.css` holds the design tokens, layout, and motion, split into cascade layers.
-- `dist/script.js` runs the tabs, quest board, crash demo, copy button, effects toggle, framed pictures, and section tracking. It lazy-loads the diagrams, the city, and Capri.
-- `dist/scene.js` draws the pixel city on a low-resolution canvas. Colours are in `STOPS`, and the towers come from seeded random numbers, so they're the same on every visit. The neon signs take their words from `SIGNS`, in order, and one of them says LONG. Shooting stars cross the sky once it turns to night.
-- `dist/viz.js` draws the animated diagrams. Flow diagrams are tables of nodes, wires, and timed moves, so editing one means editing data. Each `<figure data-viz="name">` in the HTML picks one.
-- `dist/capri.js` draws and animates Capri and her speech bubble. Where she goes is set in the HTML: each `.perch` element names a pose and a position with `data-pose`, `data-x`, and `data-y`. What she says on arrival is the section's `data-line`.
-- `tools/build_art.py` makes the loops, posters, floor, and dither tiles in `dist/assets/art/`. Run `npm run art -- /path/to/sources`. It needs numpy, OpenCV, Pillow, and ffmpeg. The source GIFs and stills are show footage, so they aren't in this repository, and the script lists the file names it expects.
+- `index.html` holds the `<head>`: the meta tags, structured data, and font preloads.
+- `src/content.js` holds the jobs, projects, pipeline stages, and skills as data. [Content sources](#content-sources) says where each bullet comes from.
+- `src/components/` has one component per page section (`Header`, `Hero`, `Work`, `Projects`, `About`, `Contact`), the pipeline's crash demo in `Pipeline.jsx`, and the shared window, stats, and frame pieces in `parts.jsx`. `src/App.jsx` puts them in order.
+- `src/hooks/` holds the behaviour: `useTabs` for the WAI-ARIA tabs, `useDeliverySim` for the crash demo, `useArrival` for window entrances, `useSectionTracking` for the nav and Capri, `useEffectsSetting` and `useFxVideos` for the effects toggle and framed pictures, and `useEngines` to lazy-load the diagrams, the city, and Capri.
+- `src/styles.css` holds the design tokens, layout, and motion, split into cascade layers.
+- `src/engines/scene.js` draws the pixel city on a low-resolution canvas. Colours are in `STOPS`, and the towers come from seeded random numbers, so they're the same on every visit. The neon signs take their words from `SIGNS`, in order, and one of them says LONG. Shooting stars cross the sky once it turns to night.
+- `src/engines/viz.js` draws the animated diagrams. Flow diagrams are tables of nodes, wires, and timed moves, so editing one means editing data. Each `<figure data-viz="name">` picks one, and the name comes from the job or project in `src/content.js`.
+- `src/engines/capri.js` draws and animates Capri and her speech bubble. Where she goes is set in the components: each `<Perch>` names a pose and a position, rendered as `data-pose`, `data-x`, and `data-y`. What she says on arrival is the section's `data-line`.
+- The three engines are plain modules, not React. Each one starts from a `useEffect`, reads and draws into the DOM React rendered, and returns `sync()` and `stop()`.
+- `public/` holds everything served as is, at the same paths: `public/assets/` for art, fonts, Capri's model, and the favicon.
+- `tools/build_art.py` makes the loops, posters, floor, and dither tiles in `public/assets/art/`. Run `npm run art -- /path/to/sources`. It needs numpy, OpenCV, Pillow, and ffmpeg. The source GIFs and stills are show footage, so they aren't in this repository, and the script lists the file names it expects.
 
-Run `npm run check` to check JavaScript syntax. Deploy `dist/` as static files. The site is live on Vercel at https://long-portfolio-ten.vercel.app, with `dist/` as its root. `dist/index.html` uses that address in four places: `og:url`, `og:image`, the canonical link, and the structured data. Update them if the address changes. `.openai/hosting.json` stores the older private Sites project.
+## Build and deploy
 
-`dist/assets/art/logo.png` was drawn once from Saira italic, thresholded to pixels. `dist/assets/art/city.png` is a capture of the city, used before JavaScript runs. `dist/assets/social.jpg` is a screenshot of the hero at 1200×630.
+`npm run build` builds the client into `dist/`, then renders `App` to HTML with `react-dom/server` and writes it into `dist/index.html`, so the built page has every word before its script loads. The browser then hydrates that HTML. `scripts/prerender.mjs` does the second half. `npm run check` runs the same build. `dist/` is build output and isn't committed.
+
+Deploy `dist/` as static files. The site is live on Vercel at https://long-portfolio-ten.vercel.app. Vercel builds it with the Vite framework preset from the repository root: build command `npm run build`, output directory `dist`. `index.html` uses that address in four places: `og:url`, `og:image`, the canonical link, and the structured data. Update them if the address changes. `.openai/hosting.json` stores the older private Sites project, which serves `dist/` and so needs a build first.
+
+`public/assets/art/logo.png` was drawn once from Saira italic, thresholded to pixels. `public/assets/art/city.png` is a capture of the city, used before JavaScript runs. `public/assets/social.jpg` is a screenshot of the hero at 1200×630.
 
 ## What's pixel art and what isn't
 
@@ -28,12 +36,9 @@ The city, the hero's floor, the logo, the window frames, and the big section tit
 
 Projects sit in one window. An index on the left lists all six, grouped by field (Systems, AI & agents, Web), and the open project fills the rest. A badge on each entry says what kind of work it was: main quest, side quest, hackathon, or club. Up to 1000px wide the index becomes a grid of tabs above the project.
 
-To add a project, edit `dist/index.html` in two places:
+To add a project, add an entry to `PROJECTS` in `src/content.js`, next to the others in its `group` (Systems, AI & agents, or Web), since a group label is drawn wherever the group changes. Set `kind` (`main`, `side`, `hackathon`, or `club`, which picks the badge and icon colour) and `line` (what Capri says when it opens). The icon is an 8×8 pixel grid written as one SVG path. The tab, its panel, and their ids come from the entry's `id`.
 
-1. Add a `<button class="board-tab" role="tab">` to `.board-rail`, under the right `.board-group` label. Set `id`, `aria-controls`, `data-kind` (`main`, `side`, `hackathon`, or `club`, which picks the badge and icon colour), and `data-line` (what Capri says when it opens). The icon is an 8×8 pixel grid written as one SVG path.
-2. Add a matching `<div class="board-panel" role="tabpanel">` to `.board-main`, before `.board-pager`.
-
-Nothing in `script.js` names a project. The pips in the title bar, the pager at the foot, and Capri's line when all of them have been opened are counted from the tabs. The board passes its own tabs to `tabGroup`, because the log pipeline's stage tabs sit inside one of its panels.
+Nothing in `Projects.jsx` names a project, except to put the pipeline demo under the log pipeline. The pips in the title bar, the pager at the foot, and Capri's line when all of them have been opened are counted from the list. The board and the log pipeline each call `useTabs` for their own tabs, so the pipeline's stage tabs stay separate from the board's.
 
 Without JavaScript the index stays hidden and the six projects stack in order. Print does the same.
 
@@ -41,7 +46,7 @@ Without JavaScript the index stays hidden and the six projects stack in order. P
 
 Each GIF plays whole, uncropped and at full length, with VHS-style colour and scanlines but no added motion. The cracked-face picture is a still because it has no GIF.
 
-Each picture has a fixed spot in the gap between two sections, chosen to suit it: Roman looking shocked above Work, the cracked face leading into the crash demo in Projects, the Capri and D fight before About, and D looking up through the embers right above the sky. Each spot is a `.hang` element in the HTML, and its position, tilt, and frame colour are CSS variables on that class. On screens up to 1000px wide each spot becomes its own row, alternating left and right. Frames sit behind the windows, so they can't cover text.
+Each picture has a fixed spot in the gap between two sections, chosen to suit it: Roman looking shocked above Work, the cracked face leading into the crash demo in Projects, the Capri and D fight before About, and D looking up through the embers right above the sky. Each spot is a `.hang` element, rendered by `<Hang>` in `src/App.jsx`, and its position, tilt, and frame colour are CSS variables on that class. On screens up to 1000px wide each spot becomes its own row, alternating left and right. Frames sit behind the windows, so they can't cover text.
 
 The night sky stays at the end of the page rather than in a frame. It's the first shot of its GIF with the lights made to twinkle, and the small Capri in it is painted out so the live one can stand there looking up.
 
@@ -58,7 +63,7 @@ She redraws twelve times a second, like limited animation, and twenty-four durin
 
 She sits behind the windows and perches on them, so she never covers text. As you scroll she teleports between perches and says a line in a bubble beside her head. The bubble picks whichever side is clear of the windows, and it sits behind them too, so it can't cover text either.
 
-The face is drawn 1.3× larger than the model's, so it reads at this size. `dist/assets/capri/model.json` is a slimmed copy of the repo's model, simplified and rounded to whole units, with a few detached shards removed from the sitting pose.
+The face is drawn 1.3× larger than the model's, so it reads at this size. `public/assets/capri/model.json` is a slimmed copy of the repo's model, simplified and rounded to whole units, with a few detached shards removed from the sitting pose.
 
 ## Diagrams
 
@@ -79,13 +84,13 @@ Everything drawn is a pure function of time, so diagrams loop cleanly and hold o
 
 This is unofficial fan work, and parts of it aren't covered by any license:
 
-- The drawing code in `dist/capri.js` is adapted from capri-companion, under MIT. See `dist/capri-companion-LICENSE.txt`.
-- `dist/assets/capri/model.json` is traced from frames of the show, and that repo's MIT license excludes it. Its rights sit with CD PROJEKT RED, Studio Trigger, and Netflix.
-- The videos and pictures in `dist/assets/art/` (`crack`, `duel`, `embers`, `roman`, `sky`) are derived from show footage, with the same rights holders. `embers` also includes the show's logo, because it's the whole GIF.
+- The drawing code in `src/engines/capri.js` is adapted from capri-companion, under MIT. See `public/capri-companion-LICENSE.txt`.
+- `public/assets/capri/model.json` is traced from frames of the show, and that repo's MIT license excludes it. Its rights sit with CD PROJEKT RED, Studio Trigger, and Netflix.
+- The videos and pictures in `public/assets/art/` (`crack`, `duel`, `embers`, `roman`, `sky`) are derived from show footage, with the same rights holders. `embers` also includes the show's logo, because it's the whole GIF.
 
 CD PROJEKT RED's fan content guidelines rule out commercial use and ask fan work to carry a notice that it is unofficial. The page doesn't currently show one. The guidelines don't cover Edgerunners material, which also involves Netflix and Studio Trigger. Remove these assets before using this version somewhere that could count as commercial.
 
-Geist, Geist Mono, and Jersey 10 are under the SIL Open Font License, in `dist/assets/fonts/`.
+Geist, Geist Mono, and Jersey 10 are under the SIL Open Font License, in `public/assets/fonts/`.
 
 ## Content sources
 
