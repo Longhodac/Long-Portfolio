@@ -1013,5 +1013,13 @@ export function startViz() {
 
   document.addEventListener('visibilitychange', sync);
   sync();
-  return { sync };
+  return {
+    sync,
+    stop() {
+      document.removeEventListener('visibilitychange', sync);
+      [viewer, resizer, lists].forEach(observer => observer.disconnect());
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+  };
 }

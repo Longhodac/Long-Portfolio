@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-OUT = Path(__file__).resolve().parent.parent / 'dist' / 'assets' / 'art'
+OUT = Path(__file__).resolve().parent.parent / 'public' / 'assets' / 'art'
 WIDTH = 840
 FPS = 15
 LOOPS = {

@@ -945,6 +945,8 @@ export async function start({ canvas, bubble, modelUrl = '/assets/capri/model.js
     return hitPaths.some(path => frameCtx.isPointInPath(path, x, y, 'evenodd'));
   }
 
+  const listening = new AbortController();
+  const { signal } = listening;
   addEventListener('pointermove', event => {
     if (event.pointerType === 'touch') return;
     wake();
@@ -957,19 +959,19 @@ export async function start({ canvas, bubble, modelUrl = '/assets/capri/model.js
       greeted = true;
       say('Go on. Poke me.');
     }
-  }, { passive: true });
+  }, { passive: true, signal });
   addEventListener('pointerdown', event => {
     wake();
     if (onHer(event)) poke();
-  }, { passive: true });
-  addEventListener('keydown', wake, { passive: true });
-  addEventListener('scroll', wake, { passive: true });
+  }, { passive: true, signal });
+  addEventListener('keydown', wake, { passive: true, signal });
+  addEventListener('scroll', wake, { passive: true, signal });
   document.addEventListener('focusin', event => {
     if (!event.target.matches(':focus-visible')) return;
     const box = event.target.getBoundingClientRect();
     lookAt(box.left + box.width / 2, box.top + box.height / 2);
-  });
-  document.addEventListener('visibilitychange', sync);
+  }, { signal });
+  document.addEventListener('visibilitychange', sync, { signal });
 
   setScale(scale);
 
@@ -981,6 +983,14 @@ export async function start({ canvas, bubble, modelUrl = '/assets/capri/model.js
     sync,
     setScale,
     get perch() { return pending || perch; },
+    stop() {
+      listening.abort();
+      cancelAnimationFrame(raf);
+      raf = 0;
+      clearInterval(typing);
+      clearTimeout(bubbleTimer);
+      if (overHer) document.body.style.cursor = '';
+    },
     // Holds her still with chosen values, for checking the artwork.
     freeze(values, name) {
       frozen = values;
