@@ -152,7 +152,7 @@ export const PROJECTS = [
       { value: '4.9×', label: 'on 10 threads' },
       { value: '∼2 ms', label: 'mmap index load' }
     ],
-    viz: { name: 'hnsw', caption: 'A real greedy search through layers, on a small sample graph rather than the 1M-vector index.' },
+    viz: { name: 'hnsw', caption: 'A real greedy search through layers, on a small sample graph rather than the 1M-vector index' },
     tags: ['C++', 'HNSW', 'SIMD', 'Concurrency', 'mmap']
   },
   {

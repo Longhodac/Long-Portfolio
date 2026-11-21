@@ -168,7 +168,8 @@
   .hero-title img { width: calc(var(--logo) * var(--px)); max-width: 100%; height: auto; image-rendering: pixelated; }
   .lede { margin-top: 28px; max-width: 580px; font-size: 18px; line-height: 1.55; }
   .lede em { font-style: normal; font-weight: 500; color: var(--cyan); }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 28px; }
+  .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 28px; }
+  .hero-mail { margin-left: 8px; font: 500 14px/20px var(--mono); }
   .floor {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
     height: calc(44 * var(--px));
@@ -232,8 +233,8 @@
   .win-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
     padding: 7px 16px;
-    font: 500 12px/18px var(--mono); letter-spacing: 0.08em; color: var(--cyan);
-    background: var(--panel-2); text-transform: uppercase;
+    font: 500 12px/18px var(--mono); letter-spacing: 0.01em; color: var(--cyan);
+    background: var(--panel-2);
   }
   .win-bar i {
     width: 8px; height: 8px; flex: none;
@@ -322,10 +323,6 @@
       linear-gradient(var(--cyan), var(--cyan)) right bottom / 14px 2px no-repeat,
       linear-gradient(var(--cyan), var(--cyan)) right bottom / 2px 14px no-repeat;
   }
-  .viz::after {
-    content: ''; position: absolute; top: 0; bottom: 0; left: -140px; width: 140px; pointer-events: none;
-    background: linear-gradient(90deg, transparent, rgb(69 212 255 / 0.09), transparent);
-  }
   .viz canvas { position: relative; display: block; width: 100%; max-width: none; }
   .viz figcaption { position: relative; margin-top: 10px; font: 400 11px/16px var(--mono); color: var(--muted); }
 
@@ -351,7 +348,7 @@
   .board-rail { position: sticky; top: calc(var(--nav-height) + 12px); display: grid; gap: 2px; padding: 14px 8px 16px; }
   .board-group {
     display: flex; align-items: center; gap: 8px; padding: 12px 2px 4px 10px;
-    font: 500 11px/16px var(--mono); letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
+    font: 500 11px/16px var(--mono); letter-spacing: 0.01em; color: var(--muted);
   }
   .board-group:first-child { padding-top: 0; }
   .board-group::after { content: ''; flex: 1; height: 2px; background: var(--line); }
@@ -368,7 +365,7 @@
   .board-tab span { grid-column: 2 / -1; font: 400 11px/16px var(--mono); }
   .board-tab em {
     grid-area: 1 / 3; padding: 0 5px;
-    font: 500 10px/16px var(--mono); letter-spacing: 0.06em; text-transform: uppercase;
+    font: 500 11px/16px var(--mono); letter-spacing: 0.01em;
     color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent);
   }
   .board-tab:hover { background: var(--panel); }
@@ -419,7 +416,7 @@
 
   .pipeline { position: relative; margin-top: 24px; padding: 16px; background: var(--night); box-shadow: inset 0 0 0 2px var(--line); }
   .pipeline-caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; font: 400 13px/20px var(--mono); margin-bottom: 28px; }
-  .pipeline-caption b { font-weight: 500; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pipeline-caption b { font-weight: 500; color: var(--cyan); }
   .pipeline-caption span { color: var(--muted); }
   .stages { position: relative; display: none; align-items: center; flex-wrap: nowrap; }
   .is-enhanced .stages { display: flex; }
@@ -549,9 +546,9 @@
 
   /* About -------------------------------------------------------------------------------------- */
   .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
-  .sheet-label { margin-block: 20px 4px; font: 500 12px/18px var(--mono); letter-spacing: 0.08em; color: var(--cyan); text-transform: uppercase; }
+  .sheet-label { margin-block: 20px 4px; font: 500 12px/18px var(--mono); letter-spacing: 0.01em; color: var(--cyan); }
   .skills { display: grid; gap: 2px; align-content: start; }
-  .skills dt { font: 500 12px/18px var(--mono); letter-spacing: 0.08em; color: var(--cyan); text-transform: uppercase; }
+  .skills dt { font: 500 12px/18px var(--mono); letter-spacing: 0.01em; color: var(--cyan); }
   .skills dd { font-size: 15px; }
   .skills dd + dt { margin-top: 14px; }
   @media (max-width: 800px) { .about { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
@@ -646,10 +643,6 @@
     from { transform: translate(0, 0); }
     to { transform: translate(120px, -80px); }
   }
-  html[data-fx='on'] .viz::after { animation: sweep 5.5s linear infinite; }
-  @keyframes sweep {
-    to { transform: translateX(1400px); }
-  }
   html[data-fx='on'] .quest-panel h3, html[data-fx='on'] .board-panel .project-title, html[data-fx='on'] .project-title a:hover { animation: glitch-in 420ms steps(1) both; }
   @keyframes glitch-in {
     0% { text-shadow: -4px 0 var(--crimson), 4px 0 var(--cyan); translate: 3px 0; }
@@ -672,10 +665,6 @@
   }
   html[data-fx='on'] .quest-panel, html[data-fx='on'] .stage-panel, html[data-fx='on'] .board-panel {
     animation: boot 180ms steps(4) both;
-  }
-  html[data-fx='on'] .board-tab[aria-selected='true']::before { animation: nudge 800ms steps(1) infinite; }
-  @keyframes nudge {
-    50% { translate: 2px 0; }
   }
   /* The logo flickers on like a neon sign. */
   html[data-fx='on'] .hero-title img { animation: neon-on 1.3s steps(1) both; }
