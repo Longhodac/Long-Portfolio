@@ -11,7 +11,7 @@ export function Hero() {
         <ul className="hero-actions" aria-label="Profiles">
           <li><a className="btn btn-solid" href="https://github.com/Longhodac" target="_blank" rel="noopener noreferrer">GitHub{NEW_TAB}</a></li>
           <li><a className="btn" href="https://www.linkedin.com/in/long-hodac/" target="_blank" rel="noopener noreferrer">LinkedIn{NEW_TAB}</a></li>
-          <li><a className="btn" href="mailto:lhodac@ucsd.edu">Email</a></li>
+          <li><a className="link hero-mail" href="mailto:lhodac@ucsd.edu">Email</a></li>
         </ul>
       </div>
       <div className="floor" aria-hidden="true"></div>
