@@ -40,7 +40,7 @@ export function Pipeline({ effectsOn, say }) {
         <div className="sim-controls">
           <button className={cx('btn crash', down.has(selected) && 'is-down')} type="button" onClick={crash}>{down.has(selected) ? 'Restart ' : 'Crash '}<span className="crash-name">{name}</span></button>
           <p className="sim-readout" aria-hidden="true"><span>read <b data-count="read">{counts.read}</b></span><span>indexed <b data-count="indexed">{counts.indexed}</b></span><span>in flight <b data-count="waiting">{counts.read - counts.indexed}</b></span><span>lost <b data-count="lost">0</b></span></p>
-          <p className="sim-note">An illustration of the delivery rules, not measured data.</p>
+          <p className="sim-note">An illustration of the delivery rules, not measured data</p>
           <p className="sr-only sim-status" role="status">{status}</p>
         </div>
         <div className={cx('crt', down.size > 0 && 'is-paged')} aria-hidden="true"><img src="/assets/art/roman.jpg" alt="" width="840" height="494" loading="lazy" decoding="async" /><span className="crt-label"></span></div>
